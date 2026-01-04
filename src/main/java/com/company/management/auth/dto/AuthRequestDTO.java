@@ -1,15 +1,19 @@
 package com.company.management.auth.dto;
 
+import com.company.management.projects.model.Project;
+
 public class AuthRequestDTO {
     private String username;
     private String password;
     private String email;
+    private Project project;
     public AuthRequestDTO() {
     }
-    public AuthRequestDTO(String username, String password, String email) {
+    public AuthRequestDTO(String username, String password, String email, Project project) {
         this.username = username;
         this.password = password;
         this.email = email;
+        this.project = project;
     }
     public String getEmail() {
         return email;
@@ -28,5 +32,11 @@ public class AuthRequestDTO {
     }
     public void setPassword(String password) {
         this.password = password;
+    }
+    public Project getProject() {
+        return project;
+        }   
+    public void setProject(Project project) {
+        this.project = project; 
     }
 }

@@ -23,7 +23,8 @@ public class AuthController {
         user registeredUser = authService.register(
             authRequest.getUsername(),
             authRequest.getEmail(),
-             authRequest.getPassword()
+             authRequest.getPassword(),
+             authRequest.getProject()
         );
         return ResponseEntity.ok(registeredUser);
     }
