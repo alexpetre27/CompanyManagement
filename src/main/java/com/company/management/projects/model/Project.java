@@ -2,8 +2,7 @@ package com.company.management.projects.model;
 
 import java.util.List;
 
-import org.apache.catalina.User;
-
+import com.company.management.users.model.user;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -22,7 +21,7 @@ public class Project {
     @Column(nullable = false, unique = true)
     private String name;
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL)
-    private List<User> users;
+    private List<user> users;
     public Project(){
 
     }
@@ -38,7 +37,7 @@ public class Project {
     public void setName(String name) {
         this.name = name;
     }
-    public void setUsers(List<User> users) {
+    public void setUsers(List<user> users) {
         this.users = users;
     }
 }
