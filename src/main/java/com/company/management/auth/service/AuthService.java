@@ -2,8 +2,8 @@ package com.company.management.auth.service;
 
 import org.springframework.stereotype.Service;
 
-import com.company.management.auth.model.User;
-import com.company.management.auth.repository.AuthRepository;
+import com.company.management.users.model.user;
+import com.company.management.users.repository.AuthRepository;
 
 @Service
 public class AuthService {
@@ -11,8 +11,8 @@ public class AuthService {
     public AuthService(AuthRepository authRepository) {
         this.authRepository = authRepository;
     }
-    public User register(String username, String email, String password) {
-        User newUser = new User(username, email, password);
+    public user register(String username, String email, String password) {
+        user newUser = new user(username, email, password);
         newUser.getCreatedAt();
         return authRepository.save(newUser);
     }

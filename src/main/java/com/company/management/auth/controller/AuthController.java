@@ -3,8 +3,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.company.management.auth.dto.AuthRequestDTO;
-import com.company.management.auth.model.User;
 import com.company.management.auth.service.AuthService;
+import com.company.management.users.model.user;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,8 +19,8 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<User> register(@RequestBody AuthRequestDTO authRequest) {
-        User registeredUser = authService.register(
+    public ResponseEntity<user> register(@RequestBody AuthRequestDTO authRequest) {
+        user registeredUser = authService.register(
             authRequest.getUsername(),
             authRequest.getEmail(),
              authRequest.getPassword()
