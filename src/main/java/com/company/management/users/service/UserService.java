@@ -1,34 +1,59 @@
 package com.company.management.users.service;
 
+import org.jspecify.annotations.Nullable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.company.management.projects.model.Project;
 import com.company.management.projects.repository.ProjectRepository;
+import com.company.management.users.dto.UserCreateRequestDTO;
 import com.company.management.users.dto.UserResponseDTO;
 import com.company.management.users.model.user;
 import com.company.management.users.repository.UserRepository;
 
 @Service
-public class UserService{
+public class UserService {
+
     private final UserRepository userRepository;
     private final ProjectRepository projectRepository;
-    public UserService(UserRepository userRepository, ProjectRepository projectRepository) {
+    private final PasswordEncoder passwordEncoder;
+
+    public UserService(
+            UserRepository userRepository,
+            ProjectRepository projectRepository,
+            PasswordEncoder passwordEncoder
+    ) {
         this.userRepository = userRepository;
         this.projectRepository = projectRepository;
+        this.passwordEncoder = passwordEncoder;
     }
-    public user createUser(String username, String email, String password, Long projectId) {
-        Project project = projectRepository.findById(projectId)
-            .orElseThrow(() -> new RuntimeException("Project not found"));
-        user user = new user(username, email, password, project);
-        return userRepository.save(user);
+
+    public UserResponseDTO createUser(UserCreateRequestDTO dto) {
+
+        Project project = projectRepository.findById(dto.projectId)
+                .orElseThrow(() -> new RuntimeException("Project not found"));
+
+        user user = new user();
+        user.setUsername(dto.username);
+        user.setEmail(dto.email);
+
+        user.setPassword(passwordEncoder.encode(dto.password));
+
+        user.getProject().addProject(project);
+
+        user saved = userRepository.save(user);
+
+        return mapToDTO(saved);
     }
-    private UserResponseDTO mapToDTO(user user){
+
+    private UserResponseDTO mapToDTO(user user) {
         UserResponseDTO dto = new UserResponseDTO();
         dto.id = user.getId();
         dto.username = user.getUsername();
         dto.email = user.getEmail();
-        dto.projectId = user.getProject().getId();
         return dto;
     }
 
+
+  
 }

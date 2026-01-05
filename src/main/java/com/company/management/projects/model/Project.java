@@ -40,4 +40,9 @@ public class Project {
     public void setUsers(List<user> users) {
         this.users = users;
     }
+    public void addProject(Project project) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'addProject'");
+    }
+   
 }

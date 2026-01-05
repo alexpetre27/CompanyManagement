@@ -1,5 +1,7 @@
 package com.company.management.users.model;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 import com.company.management.projects.model.Project;
 
@@ -8,7 +10,9 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 
 @Entity
@@ -25,8 +29,14 @@ public class user {
     private String password;
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
-    @ManyToOne
-    private Project project;
+      @ManyToMany
+    @JoinTable(
+        name = "users_projects",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "project_id")
+    )
+    private Set<Project> projects = new HashSet<>();
+      private Project project;
     public user() {
     }
     public user(String username, String email, String password, Project project) {
@@ -67,5 +77,7 @@ public class user {
     public void setPassword(String password){
         this.password = password;
     }
-  
+    public void addProject(Project project) {
+        this.projects.add(project);
+    }
 }
