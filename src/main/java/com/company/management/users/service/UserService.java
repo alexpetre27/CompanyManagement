@@ -1,6 +1,5 @@
 package com.company.management.users.service;
 
-import org.jspecify.annotations.Nullable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -39,7 +38,7 @@ public class UserService {
 
         user.setPassword(passwordEncoder.encode(dto.password));
 
-        user.getProject().addProject(project);
+        user.addProject(project);
 
         user saved = userRepository.save(user);
 
