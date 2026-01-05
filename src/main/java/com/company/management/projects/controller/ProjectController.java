@@ -1,13 +1,14 @@
 package com.company.management.projects.controller;
 
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.company.management.projects.dto.CreateProjectRequestDTO;
 import com.company.management.projects.dto.ProjectResponseDTO;
-import com.company.management.projects.model.Project;
 import com.company.management.projects.service.ProjectService;
 
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import jakarta.validation.Valid;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -24,9 +25,9 @@ public class ProjectController {
     }
 
     @PostMapping
-    public ResponseEntity<Project> createProject(
-            @RequestParam String name
+    public ResponseEntity<ProjectResponseDTO> createProject(
+           @Valid @RequestBody CreateProjectRequestDTO dto
     ) {
-        return ResponseEntity.ok(projectService.createProject(name));
+        return ResponseEntity.ok(projectService.createProject(dto));
     }
 }

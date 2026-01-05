@@ -1,7 +1,7 @@
 package com.company.management.projects.dto;
 public class ProjectResponseDTO{
 
-    private Long id;
-    private String name;
+    public Long id;
+    public String name;
     private String projectId;
 }

@@ -7,6 +7,7 @@ import com.company.management.users.dto.UserCreateRequestDTO;
 import com.company.management.users.dto.UserResponseDTO;
 import com.company.management.users.service.UserService;
 
+import jakarta.validation.Valid;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -25,7 +26,7 @@ public class UserController {
 
     @PostMapping
     public ResponseEntity<UserResponseDTO> createUser(
-            @RequestBody UserCreateRequestDTO dto
+           @Valid @RequestBody UserCreateRequestDTO dto
     ) {
         return ResponseEntity.ok(userService.createUser(dto));
     }
