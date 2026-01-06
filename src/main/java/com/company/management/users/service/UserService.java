@@ -3,10 +3,14 @@ package com.company.management.users.service;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.company.management.common.exception.BadRequestException;
+import com.company.management.common.exception.ConflictException;
+import com.company.management.common.exception.ResourceNotFoundException;
 import com.company.management.projects.model.Project;
 import com.company.management.projects.repository.ProjectRepository;
 import com.company.management.users.dto.UserCreateRequestDTO;
 import com.company.management.users.dto.UserResponseDTO;
+
 import com.company.management.users.model.user;
 import com.company.management.users.repository.UserRepository;
 
@@ -29,8 +33,19 @@ public class UserService {
 
     public UserResponseDTO createUser(UserCreateRequestDTO dto) {
 
+        if (dto.username == null || dto.username.isBlank()) {
+            throw new BadRequestException("Username cannot be empty");
+        }
+        if (dto.email == null || dto.email.isBlank()) {
+            throw new BadRequestException("Email cannot be empty");
+        }
+
+        if (userRepository.findByEmail(dto.email).isPresent()) {
+            throw new ConflictException("User already exists with this email");
+        }
+
         Project project = projectRepository.findById(dto.projectId)
-                .orElseThrow(() -> new RuntimeException("Project not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Project not found with id " + dto.projectId));
 
         String encodedPassword = passwordEncoder.encode(dto.password);
         user user = new user(
@@ -51,7 +66,4 @@ public class UserService {
         dto.email = user.getEmail();
         return dto;
     }
-
-
-  
 }
