@@ -32,14 +32,13 @@ public class UserService {
         Project project = projectRepository.findById(dto.projectId)
                 .orElseThrow(() -> new RuntimeException("Project not found"));
 
-        user user = new user();
-        user.setUsername(dto.username);
-        user.setEmail(dto.email);
-
-        user.setPassword(passwordEncoder.encode(dto.password));
-
-        user.addProject(project);
-
+        String encodedPassword = passwordEncoder.encode(dto.password);
+        user user = new user(
+            dto.username,
+            dto.email,
+            encodedPassword,
+            project
+        );
         user saved = userRepository.save(user);
 
         return mapToDTO(saved);
