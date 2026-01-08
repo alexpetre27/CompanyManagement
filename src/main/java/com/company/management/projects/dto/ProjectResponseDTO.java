@@ -1,7 +1,10 @@
 package com.company.management.projects.dto;
+
+import java.util.List;
+
 public class ProjectResponseDTO{
 
     public Long id;
     public String name;
-    private String projectId;
+    public List<Long> userIds;
 }

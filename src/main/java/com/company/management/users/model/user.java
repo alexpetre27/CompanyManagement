@@ -1,6 +1,7 @@
 package com.company.management.users.model;
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 import com.company.management.projects.model.Project;
@@ -23,7 +24,6 @@ public class user {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
       @ElementCollection(fetch = FetchType.EAGER)
-    private Set<String> roles;
     private Long id; 
     @Column(unique = true, nullable = false)
     private String username;
@@ -40,6 +40,8 @@ public class user {
         inverseJoinColumns = @JoinColumn(name = "project_id")
     )
     private Set<Project> projects = new HashSet<>();
+     @ElementCollection(fetch = FetchType.EAGER)
+    private Set<String> roles;
       private Project project;
     public user() {
     }
@@ -86,6 +88,9 @@ public class user {
     }
     public Set<String> getRoles() {
         return roles;
+    }
+    public Set<Project> getProjects() {
+        return projects;
     }
 
 }
