@@ -6,7 +6,9 @@ import java.util.Set;
 import com.company.management.projects.model.Project;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -20,6 +22,8 @@ import jakarta.persistence.Table;
 public class user {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+      @ElementCollection(fetch = FetchType.EAGER)
+    private Set<String> roles;
     private Long id; 
     @Column(unique = true, nullable = false)
     private String username;
@@ -80,4 +84,8 @@ public class user {
     public void addProject(Project project) {
         this.projects.add(project);
     }
+    public Set<String> getRoles() {
+        return roles;
+    }
+
 }

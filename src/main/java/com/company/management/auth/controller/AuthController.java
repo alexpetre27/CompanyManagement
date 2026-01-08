@@ -2,7 +2,6 @@ package com.company.management.auth.controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.company.management.auth.dto.AuthRequestDTO;
 import com.company.management.auth.dto.LoginRequestDTO;
 import com.company.management.auth.dto.LoginResponseDTO;
 import com.company.management.auth.service.AuthService;
@@ -26,7 +25,7 @@ public class AuthController {
         this.userService = userService;
     }
 
-  @PostMapping("/register")
+     @PostMapping("/register")
     public ResponseEntity<UserResponseDTO> register(
             @Valid @RequestBody UserCreateRequestDTO dto
     ) {

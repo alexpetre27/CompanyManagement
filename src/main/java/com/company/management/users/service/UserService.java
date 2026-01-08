@@ -66,4 +66,12 @@ public class UserService {
         dto.email = user.getEmail();
         return dto;
     }
+
+    public UserResponseDTO getUserByEmail(String username) {
+        user user = userRepository.findByEmail(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with email " + username));
+        return mapToDTO(user);
+    }
+
+   
 }

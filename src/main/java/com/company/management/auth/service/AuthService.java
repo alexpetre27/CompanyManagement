@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 
 import com.company.management.auth.dto.LoginRequestDTO;
 import com.company.management.auth.dto.LoginResponseDTO;
+import com.company.management.security.JwtUtil;
 import com.company.management.users.model.user;
 import com.company.management.users.repository.UserRepository;
 
@@ -13,11 +14,13 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-
+    private final JwtUtil jwtUtil;
     public AuthService(UserRepository userRepository,
-                       PasswordEncoder passwordEncoder) {
+                       PasswordEncoder passwordEncoder,
+                       JwtUtil jwtUtil) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jwtUtil = jwtUtil;
     }
 
     public LoginResponseDTO login(LoginRequestDTO dto) {
@@ -33,7 +36,7 @@ public class AuthService {
         response.id = user.getId();
         response.username = user.getUsername();
         response.email = user.getEmail();
-        response.projectId = user.getProject().getId();
+        response.token = jwtUtil.generateToken(user.getUsername()) ;
 
         return response;
     }
