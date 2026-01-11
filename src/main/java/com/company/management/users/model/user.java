@@ -1,7 +1,6 @@
 package com.company.management.users.model;
 import java.time.LocalDateTime;
 import java.util.HashSet;
-import java.util.Optional;
 import java.util.Set;
 
 import com.company.management.projects.model.Project;

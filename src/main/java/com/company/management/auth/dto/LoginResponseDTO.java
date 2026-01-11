@@ -6,7 +6,5 @@ public class LoginResponseDTO {
     public String email;
     public Long projectId; public String token;
     public LoginResponseDTO() {
-   
-        this.token = token;
     }
 }

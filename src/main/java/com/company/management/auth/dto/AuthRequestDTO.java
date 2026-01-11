@@ -1,6 +1,5 @@
 package com.company.management.auth.dto;
 
-import com.company.management.projects.model.Project;
 
 public class AuthRequestDTO {
     private String username;
