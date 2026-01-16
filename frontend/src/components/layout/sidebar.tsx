@@ -2,92 +2,99 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useAuthStore } from "@/store/authStore";
+import { signOut } from "next-auth/react";
 import {
   LayoutDashboard,
+  Briefcase,
   Users,
-  FolderKanban,
   LogOut,
   Settings,
+  Building2,
   ChevronRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const navItems = [
-  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { name: "Proiecte", href: "/dashboard/projects", icon: FolderKanban },
-  { name: "Utilizatori", href: "/dashboard/users", icon: Users },
-  { name: "Setări", href: "/dashboard/settings", icon: Settings },
+const menuItems = [
+  { icon: LayoutDashboard, label: "Overview", href: "/" },
+  { icon: Briefcase, label: "Proiecte", href: "/projects" },
+  { icon: Users, label: "Echipă", href: "/users" },
+  { icon: Settings, label: "Setări", href: "/settings" },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { logout, user } = useAuthStore();
+
+  const handleLogout = () => {
+    signOut({ callbackUrl: "/login" });
+  };
 
   return (
-    <aside className="w-64 h-screen bg-slate-900 text-slate-300 flex flex-col border-r border-slate-800">
-      <div className="p-6 flex items-center gap-3">
-        <div className="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center text-white font-bold shadow-lg shadow-indigo-500/20">
-          C
+    <aside className="w-72 bg-white border-r border-slate-200 flex flex-col h-full">
+      <div className="p-8 flex items-center gap-3">
+        <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-200">
+          <Building2 className="text-white" size={24} />
         </div>
-        <span className="text-xl font-bold text-white tracking-tight">
-          Management
+        <span className="text-xl font-bold text-slate-900 tracking-tight">
+          CoreAdmin
         </span>
       </div>
 
-      <nav className="flex-1 px-4 py-4 space-y-1">
-        {navItems.map((item) => {
+      <nav className="flex-1 px-4 space-y-1">
+        {menuItems.map((item) => {
           const isActive = pathname === item.href;
           return (
             <Link
-              key={item.name}
+              key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center justify-between px-3 py-2.5 rounded-xl transition-all duration-200 group",
+                "flex items-center justify-between px-4 py-3.5 rounded-2xl transition-all duration-200 group",
                 isActive
-                  ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/20"
-                  : "hover:bg-slate-800 hover:text-slate-100"
+                  ? "bg-indigo-50 text-indigo-600"
+                  : "text-slate-500 hover:bg-slate-50 hover:text-slate-900",
               )}
             >
               <div className="flex items-center gap-3">
                 <item.icon
                   size={20}
                   className={cn(
+                    "transition-colors",
                     isActive
-                      ? "text-white"
-                      : "text-slate-400 group-hover:text-slate-100"
+                      ? "text-indigo-600"
+                      : "text-slate-400 group-hover:text-slate-600",
                   )}
                 />
-                <span className="font-medium">{item.name}</span>
+                <span className="font-bold text-sm tracking-tight">
+                  {item.label}
+                </span>
               </div>
-              {isActive && <ChevronRight size={16} />}
+              {isActive && (
+                <ChevronRight size={16} className="text-indigo-600" />
+              )}
             </Link>
           );
         })}
       </nav>
 
-      <div className="p-4 border-t border-slate-800 bg-slate-900/50">
-        <div className="flex items-center gap-3 px-2 py-3 mb-2">
-          <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center border border-slate-600">
-            {user?.username?.charAt(0).toUpperCase()}
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-white truncate">
-              {user?.username}
-            </p>
-            <p className="text-xs text-slate-500 truncate">{user?.email}</p>
+      <div className="p-4 mt-auto">
+        <div className="bg-slate-900 rounded-[2rem] p-6 mb-4 relative overflow-hidden">
+          <p className="text-white text-xs font-bold mb-1 opacity-80 uppercase tracking-widest">
+            Plan Curent
+          </p>
+          <p className="text-white font-bold text-lg mb-4 italic">Enterprise</p>
+          <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+            <div className="bg-indigo-500 h-full w-3/4 rounded-full" />
           </div>
         </div>
 
         <button
-          onClick={logout}
-          className="w-full flex items-center gap-3 px-3 py-2.5 text-slate-400 hover:text-red-400 hover:bg-red-400/10 rounded-xl transition-all group"
+          onClick={handleLogout}
+          className="w-full flex items-center gap-3 px-4 py-4 text-rose-500 font-bold text-sm rounded-2xl hover:bg-rose-50 transition-colors group"
         >
           <LogOut
             size={20}
             className="group-hover:translate-x-1 transition-transform"
           />
-          <span className="font-medium">Deconectare</span>
+          Deconectare
         </button>
       </div>
     </aside>

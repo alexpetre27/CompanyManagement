@@ -1,90 +1,62 @@
 "use client";
 
-import { useState } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
-import { Lock, Mail, Loader2, Building2 } from "lucide-react";
+import Link from "next/link";
+import { Github, Building2, Mail, ArrowRight } from "lucide-react";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-
-    const res = await signIn("credentials", {
-      email,
-      password,
-      redirect: false,
-    });
-
-    setIsLoading(false);
-
-    if (res?.error) {
-      toast.error("Invalid credentials");
-    } else {
-      toast.success("Welcome back!");
-      router.push("/dashboard");
-    }
-  };
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50">
-      <div className="w-full max-w-md p-8">
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
+      <div className="w-full max-w-md animate-in fade-in zoom-in duration-500">
         <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-indigo-600 rounded-3xl mb-6">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-indigo-600 rounded-3xl shadow-xl shadow-indigo-200 mb-6">
             <Building2 className="text-white" size={40} />
           </div>
-          <h1 className="text-4xl font-extrabold">System Login</h1>
+          <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">
+            Management System
+          </h1>
+          <p className="text-slate-500 mt-3 font-medium">
+            Connect to your account
+          </p>
         </div>
 
-        <div className="bg-white p-10 rounded-3xl shadow-xl">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label>Email</label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-3 text-gray-400" />
-                <input
-                  type="email"
-                  required
-                  className="pl-10 w-full py-3 rounded-xl border"
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </div>
-            </div>
+        <div className="bg-white p-10 rounded-[2.5rem] shadow-2xl shadow-slate-200/50 border border-slate-100 space-y-6">
+          <button
+            onClick={() => signIn("github", { callbackUrl: "/" })}
+            className="w-full flex items-center justify-center gap-3 bg-slate-900 hover:bg-slate-800 text-white font-bold py-4 rounded-2xl shadow-lg shadow-slate-900/20 active:scale-[0.98] transition-all text-lg"
+          >
+            <Github size={24} />
+            Continue with GitHub
+          </button>
 
-            <div>
-              <label>Password</label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-3 text-gray-400" />
-                <input
-                  type="password"
-                  required
-                  className="pl-10 w-full py-3 rounded-xl border"
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </div>
+          <div className="relative py-2">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-slate-100"></span>
             </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-white px-4 text-slate-400 font-semibold tracking-wider">
+                Or
+              </span>
+            </div>
+          </div>
 
-            <button
-              disabled={isLoading}
-              className="w-full bg-indigo-600 text-white py-3 rounded-xl"
-            >
-              {isLoading ? <Loader2 className="animate-spin" /> : "Login"}
+          <div className="space-y-4">
+            <button className="w-full flex items-center justify-center gap-3 bg-white border-2 border-slate-100 text-slate-600 font-bold py-4 rounded-2xl hover:bg-slate-50 hover:border-slate-200 transition-all">
+              <Mail size={20} className="text-slate-400" />
+              Email Sign In
             </button>
 
-            <button
-              type="button"
-              onClick={() => signIn("github")}
-              className="w-full bg-gray-900 text-white py-3 rounded-xl"
+            <Link
+              href="/register"
+              className="w-full flex items-center justify-center gap-2 py-4 text-indigo-600 font-bold hover:text-indigo-700 transition-colors group"
             >
-              Sign in with GitHub
-            </button>
-          </form>
+              Create a new account
+              <ArrowRight
+                size={18}
+                className="group-hover:translate-x-1 transition-transform"
+              />
+            </Link>
+          </div>
         </div>
       </div>
     </div>
