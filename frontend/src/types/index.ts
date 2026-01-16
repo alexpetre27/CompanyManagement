@@ -1,3 +1,5 @@
+import NextAuth, { DefaultSession } from "next-auth";
+
 export interface AuthRequestDTO {
   username: string;
   email: string;
@@ -55,4 +57,28 @@ export interface UserCreateRequestDTO {
 export interface ApiResponse<T> {
   data: T;
   message?: string;
+}
+declare module "next-auth" {
+  interface User {
+    username?: string;
+    projectId?: number;
+    token?: string;
+  }
+  interface Session {
+    user: User & {
+      id?: number;
+      username?: string;
+      projectId?: number;
+    };
+    backendToken?: string;
+  }
+}
+
+declare module "next-auth/jwt" {
+  interface JWT {
+    id?: number;
+    username?: string;
+    projectId?: number;
+    backendToken?: string;
+  }
 }

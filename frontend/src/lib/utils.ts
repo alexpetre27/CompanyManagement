@@ -1,29 +1,45 @@
-import { clsx, type ClassValue } from "clsx";
+import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import axios from "axios";
-import { ErrorResponse } from "@/types";
+import axios, { AxiosError } from "axios";
 
-export function cn(...inputs: ClassValue[]) {
+interface BackendError {
+  message: string;
+}
+
+export function cn(...inputs: ClassValue[]): string {
   return twMerge(clsx(inputs));
 }
 
-export function getErrorMessage(error: unknown): string {
+export function getErrorMessage(
+  error: Error | AxiosError | string | null,
+): string {
   if (axios.isAxiosError(error)) {
-    const data = error.response?.data as ErrorResponse;
-    if (data?.message) return data.message;
-    return error.message || "Eroare de conexiune la server.";
+    const data = error.response?.data as BackendError;
+    return data?.message || error.message;
   }
-
-  if (error instanceof Error) return error.message;
-  return "A apărut o eroare neașteptată.";
+  if (error instanceof Error) {
+    return error.message;
+  }
+  if (typeof error === "string") {
+    return error;
+  }
+  return "Eroare neașteptată";
 }
 
-export function getInitials(name: string | undefined) {
+export function formatDate(date: string): string {
+  if (!date) return "";
+  return new Intl.DateTimeFormat("ro-RO", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(new Date(date));
+}
+
+export function getInitials(name: string): string {
   if (!name) return "??";
-  return name
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
+  const parts = name.trim().split(" ");
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+  return name.substring(0, 2).toUpperCase();
 }
