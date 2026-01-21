@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 import com.company.management.auth.dto.LoginRequestDTO;
 import com.company.management.auth.dto.LoginResponseDTO;
 import com.company.management.security.JwtUtil;
-import com.company.management.users.model.user;
+import com.company.management.users.model.User;
 import com.company.management.users.repository.UserRepository;
 
 @Service
@@ -25,7 +25,7 @@ public class AuthService {
 
     public LoginResponseDTO login(LoginRequestDTO dto) {
 
-        user user = userRepository.findByEmail(dto.email)
+        User user = userRepository.findByEmail(dto.email)
             .orElseThrow(() -> new RuntimeException("Invalid credentials"));
 
         if (!passwordEncoder.matches(dto.password, user.getPassword())) {

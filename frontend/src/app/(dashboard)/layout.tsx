@@ -1,3 +1,5 @@
+export const runtime = "nodejs";
+
 import { Sidebar } from "@/components/layout/Sidebar";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";

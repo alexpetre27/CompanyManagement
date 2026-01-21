@@ -1,5 +1,3 @@
-import NextAuth, { DefaultSession } from "next-auth";
-
 export interface AuthRequestDTO {
   username: string;
   email: string;
@@ -70,15 +68,6 @@ declare module "next-auth" {
       username?: string;
       projectId?: number;
     };
-    backendToken?: string;
-  }
-}
-
-declare module "next-auth/jwt" {
-  interface JWT {
-    id?: number;
-    username?: string;
-    projectId?: number;
     backendToken?: string;
   }
 }

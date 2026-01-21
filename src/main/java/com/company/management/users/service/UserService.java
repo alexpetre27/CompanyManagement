@@ -11,7 +11,7 @@ import com.company.management.projects.repository.ProjectRepository;
 import com.company.management.users.dto.UserCreateRequestDTO;
 import com.company.management.users.dto.UserResponseDTO;
 
-import com.company.management.users.model.user;
+import com.company.management.users.model.User;
 import com.company.management.users.repository.UserRepository;
 
 @Service
@@ -32,34 +32,28 @@ public class UserService {
     }
 
     public UserResponseDTO createUser(UserCreateRequestDTO dto) {
-
-        if (dto.username == null || dto.username.isBlank()) {
+        if (dto.username == null || dto.username.isBlank()) 
             throw new BadRequestException("Username cannot be empty");
-        }
-        if (dto.email == null || dto.email.isBlank()) {
+        if (dto.email == null || dto.email.isBlank()) 
             throw new BadRequestException("Email cannot be empty");
-        }
-
-        if (userRepository.findByEmail(dto.email).isPresent()) {
+        if (userRepository.findByEmail(dto.email).isPresent()) 
             throw new ConflictException("User already exists with this email");
-        }
-
         Project project = projectRepository.findById(dto.projectId)
                 .orElseThrow(() -> new ResourceNotFoundException("Project not found with id " + dto.projectId));
 
         String encodedPassword = passwordEncoder.encode(dto.password);
-        user user = new user(
+        User user = new User(
             dto.username,
             dto.email,
             encodedPassword,
             project
         );
-        user saved = userRepository.save(user);
+        User saved = userRepository.save(user);
 
         return mapToDTO(saved);
     }
 
-    private UserResponseDTO mapToDTO(user user) {
+    private UserResponseDTO mapToDTO(User user) {
         UserResponseDTO dto = new UserResponseDTO();
         dto.id = user.getId();
         dto.username = user.getUsername();
@@ -68,7 +62,7 @@ public class UserService {
     }
 
     public UserResponseDTO getUserByEmail(String username) {
-        user user = userRepository.findByEmail(username)
+        User user = userRepository.findByEmail(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with email " + username));
         return mapToDTO(user);
     }

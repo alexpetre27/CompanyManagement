@@ -6,7 +6,7 @@ import com.company.management.projects.dto.ProjectResponseDTO;
 import com.company.management.projects.model.Project;
 import com.company.management.projects.repository.ProjectRepository;
 import com.company.management.users.dto.UserResponseDTO;
-import com.company.management.users.model.user;
+import com.company.management.users.model.User;
 import com.company.management.users.repository.UserRepository;
 
 
@@ -40,7 +40,7 @@ public class ProjectController {
     ){
         Project project = projectRepository.findById(projectId)
             .orElseThrow(() -> new RuntimeException("Project not found with id " + projectId));
-        List<Long> userIds = userRepository.findAll().stream()  .filter(u -> u.getProject() != null && u.getProject().getId().equals(project.getId()))
+        List<Long> userIds = userRepository.findAll().stream()  .filter(u -> u.getProjects() != null && u.getProjects().stream().anyMatch(p -> p.getId().equals(project.getId())))
                 .map(u -> u.getId())
                 .collect(Collectors.toList());
                 return ResponseEntity.ok("Users in project: " + userIds.toString());
@@ -66,7 +66,7 @@ public class ProjectController {
     @GetMapping("/users/{userId}/projects")
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
     public ResponseEntity<List<ProjectResponseDTO>> listProjectsPerUser(@PathVariable Long userId) {
-        user user = userRepository.findById(userId)
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
       List<ProjectResponseDTO> list = user.getProjects().stream()
