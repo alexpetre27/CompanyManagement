@@ -35,7 +35,7 @@ export function Sidebar() {
           <Building2 className="text-white" size={24} />
         </div>
         <span className="text-xl font-bold text-slate-900 tracking-tight">
-          CoreAdmin
+          MicroManager
         </span>
       </div>
 
@@ -75,28 +75,16 @@ export function Sidebar() {
         })}
       </nav>
 
-      <div className="p-4 mt-auto">
-        <div className="bg-slate-900 rounded-[2rem] p-6 mb-4 relative overflow-hidden">
-          <p className="text-white text-xs font-bold mb-1 opacity-80 uppercase tracking-widest">
-            Plan Curent
-          </p>
-          <p className="text-white font-bold text-lg mb-4 italic">Enterprise</p>
-          <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
-            <div className="bg-indigo-500 h-full w-3/4 rounded-full" />
-          </div>
-        </div>
-
-        <button
-          onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-4 py-4 text-rose-500 font-bold text-sm rounded-2xl hover:bg-rose-50 transition-colors group"
-        >
-          <LogOut
-            size={20}
-            className="group-hover:translate-x-1 transition-transform"
-          />
-          Deconectare
-        </button>
-      </div>
+      <button
+        onClick={handleLogout}
+        className="w-full flex items-center gap-3 px-4 py-4 text-rose-500 font-bold text-sm rounded-2xl hover:bg-rose-50 transition-colors group"
+      >
+        <LogOut
+          size={20}
+          className="group-hover:translate-x-1 transition-transform"
+        />
+        Deconectare
+      </button>
     </aside>
   );
 }
