@@ -1,13 +1,11 @@
 package com.company.management.security;
 
-import java.util.stream.Collectors;
-
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.*;
 import org.springframework.stereotype.Service;
-
 import com.company.management.users.model.User;
 import com.company.management.users.repository.UserRepository;
+import java.util.Collections;
 
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
@@ -19,18 +17,16 @@ public class CustomUserDetailsService implements UserDetailsService {
     }
 
     @Override
-    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
+
+        String roleWithPrefix = "ROLE_" + user.getRole().toUpperCase();
 
         return org.springframework.security.core.userdetails.User.builder()
-                .username(user.getEmail())
+                .username(user.getUsername())
                 .password(user.getPassword())
-                .authorities(
-                        user.getRoles().stream()
-                            .map(SimpleGrantedAuthority::new)
-                            .collect(Collectors.toList())
-                )
+                .authorities(Collections.singletonList(new SimpleGrantedAuthority(roleWithPrefix)))
                 .build();
     }
 }

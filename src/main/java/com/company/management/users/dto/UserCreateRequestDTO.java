@@ -13,7 +13,5 @@ public class UserCreateRequestDTO {
         public String email;
         @NotBlank
         @Size(min = 6)
-        public String password;
-        @NotBlank
-        public Long projectId;
-}
+        public String password;}
+

@@ -1,16 +1,13 @@
 package com.company.management.users.service;
 
+import java.util.List;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
-import com.company.management.common.exception.BadRequestException;
+import com.company.management.auth.dto.RegisterRequestDTO;
 import com.company.management.common.exception.ConflictException;
 import com.company.management.common.exception.ResourceNotFoundException;
-import com.company.management.projects.model.Project;
-import com.company.management.projects.repository.ProjectRepository;
-import com.company.management.users.dto.UserCreateRequestDTO;
 import com.company.management.users.dto.UserResponseDTO;
-
 import com.company.management.users.model.User;
 import com.company.management.users.repository.UserRepository;
 
@@ -18,39 +15,38 @@ import com.company.management.users.repository.UserRepository;
 public class UserService {
 
     private final UserRepository userRepository;
-    private final ProjectRepository projectRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public UserService(
-            UserRepository userRepository,
-            ProjectRepository projectRepository,
-            PasswordEncoder passwordEncoder
-    ) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
-        this.projectRepository = projectRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
-    public UserResponseDTO createUser(UserCreateRequestDTO dto) {
-        if (dto.username == null || dto.username.isBlank()) 
-            throw new BadRequestException("Username cannot be empty");
-        if (dto.email == null || dto.email.isBlank()) 
-            throw new BadRequestException("Email cannot be empty");
-        if (userRepository.findByEmail(dto.email).isPresent()) 
-            throw new ConflictException("User already exists with this email");
-        Project project = projectRepository.findById(dto.projectId)
-                .orElseThrow(() -> new ResourceNotFoundException("Project not found with id " + dto.projectId));
+    public UserResponseDTO registerNewUser(RegisterRequestDTO dto) {
+        if (userRepository.findByUsername(dto.getUsername()).isPresent()) {
+            throw new ConflictException("Username is already taken");
+        }
+        if (userRepository.findByEmail(dto.getEmail()).isPresent()) {
+            throw new ConflictException("Email is already registered");
+        }
 
-        String encodedPassword = passwordEncoder.encode(dto.password);
-        User user = new User(
-            dto.username,
-            dto.email,
-            encodedPassword,
-            project
-        );
+        User user = new User();
+        user.setUsername(dto.getUsername());
+        user.setEmail(dto.getEmail());
+        user.setPassword(passwordEncoder.encode(dto.getPassword()));
+        
+        if (dto.getRole() != null) {
+            user.setRole(dto.getRole().toUpperCase());
+        }
+
         User saved = userRepository.save(user);
-
         return mapToDTO(saved);
+    }
+
+    public UserResponseDTO getUserByUsername(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        return mapToDTO(user);
     }
 
     private UserResponseDTO mapToDTO(User user) {
@@ -58,14 +54,18 @@ public class UserService {
         dto.id = user.getId();
         dto.username = user.getUsername();
         dto.email = user.getEmail();
+        dto.role = user.getRole();
         return dto;
     }
 
-    public UserResponseDTO getUserByEmail(String username) {
-        User user = userRepository.findByEmail(username)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with email " + username));
-        return mapToDTO(user);
+    public List<UserResponseDTO> getAllUsers() {
+        List<User> users = userRepository.findAll();
+        return users.stream().map(this::mapToDTO).toList();
     }
-
-   
+    public void deleteUser(Long id) {
+        if (!userRepository.existsById(id)) {
+            throw new ResourceNotFoundException("User not found");
+        }
+        userRepository.deleteById(id);
+    }
 }

@@ -1,17 +1,13 @@
 package com.company.management.users.controller;
 
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.*;
-
-import com.company.management.users.dto.UserCreateRequestDTO;
 import com.company.management.users.dto.UserResponseDTO;
 import com.company.management.users.service.UserService;
-
-import jakarta.validation.Valid;
-
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/users")
@@ -23,22 +19,23 @@ public class UserController {
         this.userService = userService;
     }
 
-    @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<UserResponseDTO> createUser(
-           @Valid @RequestBody UserCreateRequestDTO dto
-    ) {
-        return ResponseEntity.ok(userService.createUser(dto));
+    @GetMapping("/me")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+    public ResponseEntity<UserResponseDTO> getCurrentUser(Authentication authentication) {
+        String username = authentication.getName();
+        return ResponseEntity.ok(userService.getUserByUsername(username));
     }
 
-    @GetMapping("/me")
-    @PreAuthorize("hasAnyRole('ADMIN','USER')")
-    public ResponseEntity<UserResponseDTO> getCurrentUser(Authentication authentication) {
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<UserResponseDTO>> getAllUsers() {
+        return ResponseEntity.ok(userService.getAllUsers());
+    }
 
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-
-        UserResponseDTO dto = userService.getUserByEmail(userDetails.getUsername());
-
-        return ResponseEntity.ok(dto);
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+        userService.deleteUser(id);
+        return ResponseEntity.noContent().build();
     }
 }

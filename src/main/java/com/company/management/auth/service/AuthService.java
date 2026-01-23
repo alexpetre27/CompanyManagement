@@ -1,43 +1,39 @@
 package com.company.management.auth.service;
 
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-
 import com.company.management.auth.dto.LoginRequestDTO;
 import com.company.management.auth.dto.LoginResponseDTO;
 import com.company.management.security.JwtUtil;
 import com.company.management.users.model.User;
 import com.company.management.users.repository.UserRepository;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Service;
 
 @Service
 public class AuthService {
 
-    private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
+    private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
-    public AuthService(UserRepository userRepository,
-                       PasswordEncoder passwordEncoder,
-                       JwtUtil jwtUtil) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
+    private final UserRepository userRepository;
+
+    public AuthService(AuthenticationManager authenticationManager, JwtUtil jwtUtil, UserRepository userRepository) {
+        this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
+        this.userRepository = userRepository;
     }
 
     public LoginResponseDTO login(LoginRequestDTO dto) {
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(dto.getUsername(), dto.getPassword())
+        );
 
-        User user = userRepository.findByEmail(dto.email)
-            .orElseThrow(() -> new RuntimeException("Invalid credentials"));
+        User user = userRepository.findByUsername(dto.getUsername())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        if (!passwordEncoder.matches(dto.password, user.getPassword())) {
-            throw new RuntimeException("Invalid credentials");
-        }
+        String token = jwtUtil.generateToken(user.getUsername());
 
-        LoginResponseDTO response = new LoginResponseDTO();
-        response.id = user.getId();
-        response.username = user.getUsername();
-        response.email = user.getEmail();
-        response.token = jwtUtil.generateToken(user.getUsername()) ;
-
-        return response;
+        return new LoginResponseDTO(token, user.getUsername(), user.getRole());
     }
 }

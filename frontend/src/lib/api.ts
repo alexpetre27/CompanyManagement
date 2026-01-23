@@ -1,58 +1,29 @@
-import { auth } from "@/auth";
-import axios, { InternalAxiosRequestConfig } from "axios";
-import { getSession } from "next-auth/react";
-export const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api",
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
-api.interceptors.request.use(async (config) => {
-  const session = await getSession();
-  if (session?.backendToken) {
-    config.headers.Authorization = `Bearer ${session.backendToken}`;
+import { Microservice } from "@/types/microservice";
+
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api";
+
+export async function getMicroservices(): Promise<Microservice[]> {
+  const isClient = typeof window !== "undefined";
+  const token = isClient ? localStorage.getItem("token") : null;
+
+  const res = await fetch(`${BASE_URL}/microservices`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    cache: "no-store",
+  });
+
+  if (res.status === 401 || res.status === 403) {
+    if (isClient) {
+      window.location.href = "/login";
+    }
   }
-  return config;
-});
-api.interceptors.request.use(
-  (config) => {
-    const token =
-      typeof window !== "undefined" ? localStorage.getItem("token") : null;
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
 
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  },
-);
+  if (!res.ok) {
+    throw new Error(`Failed to fetch services: ${res.statusText}`);
+  }
 
-api.interceptors.request.use(
-  async (
-    config: InternalAxiosRequestConfig,
-  ): Promise<InternalAxiosRequestConfig> => {
-    const session = await auth();
-    const token = (session?.user as { accessToken?: string })?.accessToken;
-
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-
-    return config;
-  },
-);
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      if (typeof window !== "undefined") {
-        localStorage.removeItem("token");
-        window.location.href = "/login";
-      }
-    }
-    return Promise.reject(error);
-  },
-);
-export default api;
+  return res.json();
+}
