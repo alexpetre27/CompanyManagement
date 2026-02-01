@@ -49,7 +49,7 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      <ServiceList userRole={userRole} />
+      <ServiceList userRole={userRole || "Guest"} />
     </div>
   );
 }

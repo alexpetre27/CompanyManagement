@@ -29,7 +29,7 @@ export function Sidebar() {
   };
 
   return (
-    <aside className="w-72 bg-white border-r border-slate-200 flex flex-col h-full">
+    <aside className="w-72 bg-white border-r border-slate-200 flex flex-col h-screen">
       <div className="p-8 flex items-center gap-3">
         <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-200">
           <Building2 className="text-white" size={24} />
@@ -57,7 +57,6 @@ export function Sidebar() {
                 <item.icon
                   size={20}
                   className={cn(
-                    "transition-colors",
                     isActive
                       ? "text-indigo-600"
                       : "text-slate-400 group-hover:text-slate-600",
@@ -75,16 +74,18 @@ export function Sidebar() {
         })}
       </nav>
 
-      <button
-        onClick={handleLogout}
-        className="w-full flex items-center gap-3 px-4 py-4 text-rose-500 font-bold text-sm rounded-2xl hover:bg-rose-50 transition-colors group"
-      >
-        <LogOut
-          size={20}
-          className="group-hover:translate-x-1 transition-transform"
-        />
-        Deconectare
-      </button>
+      <div className="mt-auto p-4">
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center gap-3 px-4 py-3 text-rose-500 font-bold text-sm rounded-2xl hover:bg-rose-50 transition group"
+        >
+          <LogOut
+            size={20}
+            className="group-hover:translate-x-1 transition-transform"
+          />
+          Logout
+        </button>
+      </div>
     </aside>
   );
 }

@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Building2, User, Mail, Lock, Loader2, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
-import api from "@/lib/api";
 import { getErrorMessage } from "@/lib/utils";
 
 export default function RegisterPage() {
@@ -30,10 +29,16 @@ export default function RegisterPage() {
     setIsLoading(true);
 
     try {
-      await api.post("/auth/register", {
-        username: formData.username,
-        email: formData.email,
-        password: formData.password,
+      await fetch("/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username: formData.username,
+          email: formData.email,
+          password: formData.password,
+        }),
       });
 
       toast.success("Cont creat cu succes! Te poți autentifica.");

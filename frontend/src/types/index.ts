@@ -63,10 +63,12 @@ declare module "next-auth" {
     token?: string;
   }
   interface Session {
-    user: User & {
+    User: User & {
       id?: number;
       username?: string;
       projectId?: number;
+      token?: string;
+      role?: string;
     };
     backendToken?: string;
   }
