@@ -1,16 +1,45 @@
-import { auth } from "@/auth";
 import { Sidebar } from "@/components/Sidebar";
-import { Briefcase, Users, Clock, TrendingUp } from "lucide-react";
-import { redirect } from "next/navigation";
+import { getDashboardData } from "@/lib/dashboard.service";
+import { auth } from "@/auth";
+import {
+  Briefcase,
+  Users,
+  Clock,
+  TrendingUp,
+  CheckCircle2,
+  Circle,
+  AlertTriangle,
+} from "lucide-react";
 
 export default async function DashboardPage() {
   const session = await auth();
+  const user = session?.user;
 
-  if (!session?.user) {
-    redirect("/login");
+  const data = await getDashboardData();
+
+  if (!data) {
+    return (
+      <div className="flex min-h-screen bg-slate-50">
+        <Sidebar />
+        <main className="flex-1 px-10 py-8 max-w-7xl mx-auto flex flex-col items-center justify-center text-center">
+          <AlertTriangle className="h-16 w-16 text-yellow-500 mb-4" />
+          <h1 className="text-2xl font-bold text-slate-900">
+            Backend Unreachable
+          </h1>
+          <p className="text-slate-500 mt-2">
+            Logged in as {user?.email}, but unable to connect to the backend
+            server.
+          </p>
+          <p className="text-sm text-slate-400 mt-4 bg-slate-200 p-2 rounded">
+            Please check if the backend container is running and
+            INTERNAL_API_URL is correct.
+          </p>
+        </main>
+      </div>
+    );
   }
 
-  const { name, email, image } = session.user;
+  const { stats, recentProjects, todayTasks } = data;
 
   return (
     <div className="flex min-h-screen bg-slate-50">
@@ -20,28 +49,44 @@ export default async function DashboardPage() {
         <header className="mb-10 flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-slate-900">
-              Hello, {name || "User"}!
+              Hello, {user?.name || "User"}! 👋
             </h1>
             <p className="text-slate-500 mt-1">
               Logged in as{" "}
-              <span className="font-medium text-slate-700">{email}</span>. Here
-              is an overview of your activity.
+              <span className="font-medium text-slate-700">{user?.email}</span>.
+              Here is your activity overview.
             </p>
           </div>
-          {image && (
+          {user?.image && (
             <img
-              src={image}
-              alt={name || "User avatar"}
+              src={user.image}
+              alt={user.name || "User"}
               className="w-12 h-12 rounded-full border-2 border-white shadow-sm"
             />
           )}
         </header>
 
         <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-          <Kpi icon={<Briefcase />} label="Active Projects" value="12" />
-          <Kpi icon={<Users />} label="Team Members" value="48" />
-          <Kpi icon={<Clock />} label="Hours Worked" value="124h" />
-          <Kpi icon={<TrendingUp />} label="Productivity" value="+14%" />
+          <Kpi
+            icon={<Briefcase />}
+            label="Active Projects"
+            value={stats.activeProjects.toString()}
+          />
+          <Kpi
+            icon={<Users />}
+            label="Team Members"
+            value={stats.teamMembers.toString()}
+          />
+          <Kpi
+            icon={<Clock />}
+            label="Hours Worked"
+            value={`${stats.hoursWorked}h`}
+          />
+          <Kpi
+            icon={<TrendingUp />}
+            label="Productivity"
+            value={`+${stats.productivity}%`}
+          />
         </section>
 
         <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -54,28 +99,35 @@ export default async function DashboardPage() {
             </div>
 
             <div className="space-y-3">
-              {["v1.0", "v2.0", "v3.0"].map((v) => (
+              {recentProjects.map((project) => (
                 <div
-                  key={v}
+                  key={project.id}
                   className="flex items-center justify-between p-4 rounded-xl bg-slate-50 hover:bg-slate-100 transition"
                 >
                   <div>
                     <p className="font-medium text-slate-900">
-                      Project Management System {v}
+                      {project.name} {project.version}
                     </p>
                     <p className="text-xs text-slate-500">
-                      Last updated: 2 hours ago
+                      Last updated: {project.updatedAt}
                     </p>
                   </div>
-                  <div className="flex -space-x-2">
-                    <div className="w-8 h-8 rounded-full bg-slate-300 border-2 border-white" />
-                    <div className="w-8 h-8 rounded-full bg-slate-300 border-2 border-white" />
-                    <div className="w-8 h-8 rounded-full bg-indigo-500 border-2 border-white text-white text-xs flex items-center justify-center">
-                      +5
+                  <div className="flex items-center gap-2">
+                    <div className="flex -space-x-2">
+                      <div className="w-8 h-8 rounded-full bg-slate-300 border-2 border-white" />
+                      <div className="w-8 h-8 rounded-full bg-slate-300 border-2 border-white" />
+                    </div>
+                    <div className="w-8 h-8 rounded-full bg-indigo-500 text-white text-xs flex items-center justify-center font-medium">
+                      +{project.teamCount}
                     </div>
                   </div>
                 </div>
               ))}
+              {recentProjects.length === 0 && (
+                <p className="text-sm text-slate-400 py-4 text-center">
+                  No active projects found.
+                </p>
+              )}
             </div>
           </div>
 
@@ -91,16 +143,42 @@ export default async function DashboardPage() {
             </div>
 
             <div className="bg-white rounded-2xl shadow-sm p-6">
-              <h3 className="font-semibold mb-4">Tasks Today</h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-semibold">Tasks Today</h3>
+                <span className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded-full">
+                  {todayTasks.length} pending
+                </span>
+              </div>
+
               <ul className="space-y-3">
-                <li className="border-l-2 border-indigo-500 pl-3">
-                  <p className="text-sm font-medium">Code Review</p>
-                  <p className="text-xs text-slate-500">License Project</p>
-                </li>
-                <li className="border-l-2 border-indigo-500 pl-3">
-                  <p className="text-sm font-medium">Deployment Setup</p>
-                  <p className="text-xs text-slate-500">License Project</p>
-                </li>
+                {todayTasks.map((task) => (
+                  <li
+                    key={task.id}
+                    className="flex items-start gap-3 p-2 hover:bg-slate-50 rounded-lg transition"
+                  >
+                    <div className="mt-1 text-indigo-500">
+                      {task.isCompleted ? (
+                        <CheckCircle2 size={16} />
+                      ) : (
+                        <Circle size={16} />
+                      )}
+                    </div>
+                    <div>
+                      <p
+                        className={`text-sm font-medium ${
+                          task.isCompleted
+                            ? "line-through text-slate-400"
+                            : "text-slate-900"
+                        }`}
+                      >
+                        {task.title}
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        {task.projectName}
+                      </p>
+                    </div>
+                  </li>
+                ))}
               </ul>
             </div>
           </div>

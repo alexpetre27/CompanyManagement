@@ -22,7 +22,7 @@ export default function RegisterPage() {
     e.preventDefault();
 
     if (formData.password !== formData.confirmPassword) {
-      toast.error("Parolele nu coincid!");
+      toast.error("Passwords do not match!");
       return;
     }
 
@@ -41,7 +41,7 @@ export default function RegisterPage() {
         }),
       });
 
-      toast.success("Cont creat cu succes! Te poți autentifica.");
+      toast.success("Account created successfully! Please log in.");
       router.push("/login");
     } catch (error: unknown) {
       toast.error(getErrorMessage(error as Error));
