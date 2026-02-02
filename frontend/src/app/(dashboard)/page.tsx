@@ -1,4 +1,4 @@
-import { getDashboardData } from "@/lib/dashboard.service";
+import { auth } from "@/auth";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,17 +13,89 @@ import {
 import { PageContainer, CardHover } from "@/components/PageContainer";
 import { StatCardProps } from "@/types/dashboard";
 
-export default async function DashboardPage() {
-  const data = await getDashboardData();
+interface Task {
+  id: number;
+  title: string;
+  projectName: string;
+  isCompleted: boolean;
+}
 
-  if (!data) {
+interface Project {
+  id: number;
+  name: string;
+  version: string;
+  updatedAt: string;
+  teamCount: number;
+}
+
+interface DashboardData {
+  user: { name: string };
+  stats: {
+    activeProjects: number;
+    teamMembers: number;
+    hoursWorked: number;
+    productivity: number;
+  };
+  recentProjects: Project[];
+  todayTasks: Task[];
+}
+
+export default async function DashboardPage() {
+  const session = await auth();
+
+  if (!session || !session.user) {
     return (
       <div className="flex h-full items-center justify-center">
-        <p className="text-red-500 font-bold">
-          ⚠️ Could not connect to Backend.
-        </p>
+        <p className="text-red-500 font-bold">Access Denied</p>
       </div>
     );
+  }
+
+  let data: DashboardData | null = null;
+  const apiUrl = process.env.INTERNAL_API_URL || "http://backend:8080/api";
+
+  try {
+    const res = await fetch(`${apiUrl}/demo/dashboard`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "X-User-Email": session.user.email || "",
+      },
+      next: { revalidate: 0 },
+    });
+
+    if (res.ok) {
+      data = await res.json();
+    }
+  } catch (error) {
+    console.error(error);
+  }
+
+  if (!data) {
+    data = {
+      user: { name: session.user.name || "User" },
+      stats: {
+        activeProjects: 12,
+        teamMembers: 5,
+        hoursWorked: 140,
+        productivity: 85,
+      },
+      recentProjects: [],
+      todayTasks: [
+        {
+          id: 1,
+          title: "Review Java Backend",
+          projectName: "Management App",
+          isCompleted: false,
+        },
+        {
+          id: 2,
+          title: "Fix Docker Network",
+          projectName: "DevOps",
+          isCompleted: true,
+        },
+      ],
+    };
   }
 
   return (
@@ -31,7 +103,8 @@ export default async function DashboardPage() {
       <header className="flex justify-between items-center pt-2">
         <div>
           <h1 className="text-xl font-extrabold text-[#1a1f36]">
-            Welcome back, {data.user.name.split(" ")[0]}! 👋
+            Welcome back,{" "}
+            {data.user.name ? data.user.name.split(" ")[0] : "User"}! 👋
           </h1>
           <p className="text-[12px] text-slate-400 font-medium">
             Here is an overview of your projects.
@@ -97,12 +170,13 @@ export default async function DashboardPage() {
             </div>
             <div className="space-y-2">
               {data.recentProjects.length > 0 ? (
-                data.recentProjects.map((project) => (
+                data.recentProjects.map((project: Project) => (
                   <ProjectRow
                     key={project.id}
+                    id={project.id}
                     name={project.name}
                     version={project.version}
-                    time={project.updatedAt}
+                    updatedAt={project.updatedAt}
                     teamCount={project.teamCount}
                   />
                 ))
@@ -119,7 +193,7 @@ export default async function DashboardPage() {
               TODAY'S TASKS
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {data.todayTasks.map((task) => (
+              {data.todayTasks.map((task: Task) => (
                 <TaskItemMini
                   key={task.id}
                   label={task.title}
@@ -169,7 +243,7 @@ export default async function DashboardPage() {
 }
 
 function StatCard({ icon, label, value, trend, color }: StatCardProps) {
-  const colors = {
+  const colors: Record<string, string> = {
     blue: "bg-blue-50 text-blue-500",
     purple: "bg-purple-50 text-purple-500",
     green: "bg-green-50 text-green-500",
@@ -196,17 +270,7 @@ function StatCard({ icon, label, value, trend, color }: StatCardProps) {
   );
 }
 
-function ProjectRow({
-  name,
-  version,
-  time,
-  teamCount,
-}: {
-  name: string;
-  version: string;
-  time: string;
-  teamCount: number;
-}) {
+function ProjectRow({ name, version, updatedAt, teamCount }: Project) {
   return (
     <div className="flex items-center justify-between p-2 hover:bg-slate-50 rounded-xl transition-all duration-200 group cursor-pointer border border-transparent hover:border-slate-100 active:scale-[0.98]">
       <div className="flex items-center gap-3">
@@ -220,7 +284,7 @@ function ProjectRow({
               {version}
             </span>
           </h4>
-          <p className="text-[10px] text-slate-400 mt-0.5">{time}</p>
+          <p className="text-[10px] text-slate-400 mt-0.5">{updatedAt}</p>
         </div>
       </div>
       <div className="flex -space-x-1.5 items-center">
@@ -240,15 +304,13 @@ function ProjectRow({
   );
 }
 
-function TaskItemMini({
-  label,
-  sub,
-  isCompleted,
-}: {
+interface TaskItemMiniProps {
   label: string;
   sub: string;
   isCompleted: boolean;
-}) {
+}
+
+function TaskItemMini({ label, sub, isCompleted }: TaskItemMiniProps) {
   return (
     <div className="flex items-center gap-3 p-3 border border-slate-50 rounded-2xl hover:border-indigo-100 hover:bg-slate-50/50 transition-all duration-200 cursor-pointer group bg-white active:scale-[0.98]">
       <div
