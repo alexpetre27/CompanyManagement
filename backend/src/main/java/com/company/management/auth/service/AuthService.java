@@ -25,12 +25,15 @@ public class AuthService {
     }
 
     public LoginResponseDTO login(LoginRequestDTO dto) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(dto.getUsername(), dto.getPassword())
-        );
+        User user = userRepository.findByUsernameOrEmail(dto.getIdentifier(), dto.getIdentifier())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with identifier: " + dto.getIdentifier()));
 
-        User user = userRepository.findByUsername(dto.getUsername())
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        user.getUsername(), 
+                        dto.getPassword()
+                )
+        );
 
         String token = jwtUtil.generateToken(user.getUsername());
 

@@ -3,12 +3,19 @@
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Building2, User, Mail, Lock, Loader2, ArrowRight } from "lucide-react";
-import { toast } from "sonner";
-import { getErrorMessage } from "@/lib/utils";
+import {
+  Building2,
+  User,
+  Mail,
+  Lock,
+  Loader2,
+  ArrowRight,
+  AlertCircle,
+} from "lucide-react";
 
 export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState("");
   const router = useRouter();
 
   const [formData, setFormData] = useState({
@@ -20,16 +27,20 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
+    setError("");
 
     if (formData.password !== formData.confirmPassword) {
-      toast.error("Passwords do not match!");
+      setError("Passwords do not match!");
       return;
     }
 
     setIsLoading(true);
 
     try {
-      await fetch("/auth/register", {
+      const apiUrl =
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api";
+
+      const res = await fetch(`${apiUrl}/auth/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -41,10 +52,16 @@ export default function RegisterPage() {
         }),
       });
 
-      toast.success("Account created successfully! Please log in.");
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(
+          text || "Registration failed. Username or email might be taken.",
+        );
+      }
+
       router.push("/login");
-    } catch (error: unknown) {
-      toast.error(getErrorMessage(error as Error));
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Something went wrong.");
     } finally {
       setIsLoading(false);
     }
@@ -65,6 +82,13 @@ export default function RegisterPage() {
 
         <div className="bg-white p-8 rounded-[2.5rem] shadow-2xl shadow-slate-200/50 border border-slate-100">
           <form onSubmit={handleSubmit} className="space-y-5">
+            {error && (
+              <div className="flex items-center gap-2 p-3 rounded-xl bg-red-50 text-red-600 text-xs font-bold animate-in fade-in slide-in-from-top-1">
+                <AlertCircle size={14} />
+                {error}
+              </div>
+            )}
+
             <div className="space-y-2">
               <label className="text-sm font-bold text-slate-700 ml-1">
                 Username
@@ -78,7 +102,8 @@ export default function RegisterPage() {
                   type="text"
                   required
                   className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 focus:bg-white transition-all outline-none"
-                  placeholder="nume_utilizator"
+                  placeholder="Username"
+                  value={formData.username}
                   onChange={(e) =>
                     setFormData({ ...formData, username: e.target.value })
                   }
@@ -99,7 +124,8 @@ export default function RegisterPage() {
                   type="email"
                   required
                   className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 focus:bg-white transition-all outline-none"
-                  placeholder="nume@companie.ro"
+                  placeholder="name@company.com"
+                  value={formData.email}
                   onChange={(e) =>
                     setFormData({ ...formData, email: e.target.value })
                   }
@@ -121,6 +147,7 @@ export default function RegisterPage() {
                   required
                   className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 focus:bg-white transition-all outline-none"
                   placeholder="••••••••"
+                  value={formData.password}
                   onChange={(e) =>
                     setFormData({ ...formData, password: e.target.value })
                   }
@@ -142,6 +169,7 @@ export default function RegisterPage() {
                   required
                   className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 focus:bg-white transition-all outline-none"
                   placeholder="••••••••"
+                  value={formData.confirmPassword}
                   onChange={(e) =>
                     setFormData({
                       ...formData,
@@ -155,7 +183,7 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-2xl shadow-lg shadow-indigo-600/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2 mt-2"
+              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-2xl shadow-lg shadow-indigo-600/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2 mt-2 disabled:opacity-70 disabled:cursor-not-allowed"
             >
               {isLoading ? (
                 <Loader2 className="animate-spin" size={20} />

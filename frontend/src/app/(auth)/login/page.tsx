@@ -8,7 +8,7 @@ import {
   Github,
   Building2,
   Lock,
-  Mail,
+  User,
   ArrowRight,
   Loader2,
   AlertCircle,
@@ -16,7 +16,7 @@ import {
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -28,13 +28,13 @@ export default function LoginPage() {
 
     try {
       const res = await signIn("credentials", {
-        email,
+        identifier,
         password,
         redirect: false,
       });
 
       if (res?.error) {
-        setError("Invalid email or password.");
+        setError("Invalid credentials.");
         setIsLoading(false);
       } else {
         router.push("/");
@@ -51,13 +51,15 @@ export default function LoginPage() {
       <div className="w-full max-w-[420px] animate-in fade-in zoom-in duration-500">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-[#6366f1] rounded-2xl shadow-xl shadow-indigo-200 mb-5 transition-transform hover:scale-105 duration-300">
-            <Building2 className="text-white" size={32} />
+            <div className="bg-white/20 p-3 rounded-xl">
+              <Building2 className="text-white" size={32} />
+            </div>
           </div>
           <h1 className="text-3xl font-extrabold text-[#1a1f36] tracking-tight">
             Welcome!
           </h1>
           <p className="text-slate-400 mt-2 text-sm font-medium">
-            Login to access your dashboard.
+            Enter your credentials to access the workspace.
           </p>
         </div>
 
@@ -68,7 +70,7 @@ export default function LoginPage() {
               className="w-full flex items-center justify-center gap-3 bg-[#24292F] hover:bg-[#24292F]/90 text-white font-bold py-3 rounded-xl shadow-md shadow-slate-900/10 active:scale-[0.98] transition-all duration-200 text-sm"
             >
               <Github size={18} />
-              <span>Continue with GitHub</span>
+              <span>GitHub</span>
             </button>
 
             <button
@@ -93,7 +95,7 @@ export default function LoginPage() {
                   fill="#EA4335"
                 />
               </svg>
-              <span>Continue with Google</span>
+              <span>Google</span>
             </button>
           </div>
 
@@ -103,7 +105,7 @@ export default function LoginPage() {
             </div>
             <div className="relative flex justify-center text-[10px] uppercase">
               <span className="bg-white px-3 text-slate-400 font-bold tracking-widest">
-                Or with email
+                Or continue with
               </span>
             </div>
           </div>
@@ -119,13 +121,13 @@ export default function LoginPage() {
             <div className="space-y-3">
               <div className="relative group">
                 <div className="absolute left-4 top-3.5 text-slate-400 group-focus-within:text-[#6366f1] transition-colors">
-                  <Mail size={18} />
+                  <User size={18} />
                 </div>
                 <input
-                  type="email"
-                  placeholder="Email address"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  type="text"
+                  placeholder="Email or Username"
+                  value={identifier}
+                  onChange={(e) => setIdentifier(e.target.value)}
                   required
                   className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-[#6366f1] outline-none transition-all text-sm font-medium text-slate-700 placeholder:text-slate-400"
                 />
