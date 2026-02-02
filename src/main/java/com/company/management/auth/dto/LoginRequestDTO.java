@@ -8,6 +8,14 @@ public class LoginRequestDTO {
     public String username;
     @NotBlank
     public String password;
+    @NotBlank
+    public String role;
+    public String getRole() {
+        return role;
+    }
+    public void setRole(String role) {
+        this.role = role;
+    }
     public String getUsername() {
         return username;}
 

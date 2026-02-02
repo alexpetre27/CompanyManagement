@@ -45,7 +45,6 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.CONFLICT);
     }
 
-    // NOU: Această metodă prinde erorile de validare (ex: email invalid, parolă prea scurtă)
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationException(MethodArgumentNotValidException ex, HttpServletRequest request) {
         String errors = ex.getBindingResult().getFieldErrors()

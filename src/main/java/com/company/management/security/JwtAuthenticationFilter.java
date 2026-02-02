@@ -37,20 +37,15 @@ protected void doFilterInternal(
 
     String authHeader = request.getHeader("Authorization");
 
-    // No Authorization header → just continue
     if (authHeader == null || !authHeader.startsWith("Bearer ")) {
         filterChain.doFilter(request, response);
         return;
     }
-
     String token = authHeader.substring(7).trim();
-
-    // Empty or junk token → just continue (DO NOT PARSE)
     if (token.isEmpty() || token.chars().filter(ch -> ch == '.').count() != 2) {
         filterChain.doFilter(request, response);
         return;
     }
-
     try {
         String username = jwtUtil.extractUsername(token);
 
@@ -74,11 +69,9 @@ protected void doFilterInternal(
             SecurityContextHolder.getContext()
                     .setAuthentication(authentication);
         }
-
     } catch (Exception ex) {
         SecurityContextHolder.clearContext();
     }
-
     filterChain.doFilter(request, response);
 }
 }

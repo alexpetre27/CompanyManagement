@@ -21,7 +21,7 @@ public class MicroserviceService {
         Microservice service = repository.findById(id)
             .orElseThrow(() -> new RuntimeException("Service not found"));
         
-        System.out.println("Se restartează serviciul: " + service.getName());
+        System.out.println("The service is restarting: " + service.getName());
         service.setStatus("STARTING");
         repository.save(service);
     }

@@ -26,7 +26,7 @@ public class ProjectController {
     @PostMapping("/microservices/{id}/restart")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<String> restartService(@PathVariable Long id) {
-        System.out.println("Comanda de restart pentru serviciul: " + id);
+        System.out.println("Restart command for service: " + id);
         return ResponseEntity.ok("Restart command sent successfully");
     }
 }

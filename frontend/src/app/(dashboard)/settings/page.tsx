@@ -1,7 +1,6 @@
 import { auth } from "@/auth";
 import { SettingsView } from "@/components/Settings";
 import { redirect } from "next/navigation";
-import { PageContainer } from "@/components/PageContainer";
 
 export default async function SettingsPage() {
   const session = await auth();
@@ -13,11 +12,11 @@ export default async function SettingsPage() {
   const userData = {
     name: session.user.name || "User",
     email: session.user.email || "",
-    role: (session?.user as { role?: string })?.role || "USER",
+    role: ((session.user as Record<string, unknown>).role as string) || "USER",
   };
 
   return (
-    <PageContainer className="space-y-6">
+    <div className="space-y-6 animate-in fade-in duration-500">
       <div className="pt-2">
         <h1 className="text-xl font-extrabold text-[#1a1f36]">
           Account Settings
@@ -28,6 +27,6 @@ export default async function SettingsPage() {
       </div>
 
       <SettingsView user={userData} />
-    </PageContainer>
+    </div>
   );
 }

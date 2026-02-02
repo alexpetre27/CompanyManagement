@@ -6,16 +6,16 @@ import jakarta.validation.constraints.Size;
 
 public class RegisterRequestDTO {
 
-    @NotBlank(message = "Username-ul este obligatoriu")
-    @Size(min = 3, max = 20, message = "Username-ul trebuie să aibă între 3 și 20 de caractere")
+    @NotBlank(message = "Username is mandatory")
+    @Size(min = 3, max = 20, message = "Username must be between 3 and 20 characters")
     private String username;
 
-    @NotBlank(message = "Email-ul este obligatoriu")
-    @Email(message = "Email-ul trebuie să fie valid")
+    @NotBlank(message = "Email is mandatory")
+    @Email(message = "Email must be valid")
     private String email;
 
-    @NotBlank(message = "Parola este obligatorie")
-    @Size(min = 6, message = "Parola trebuie să aibă cel puțin 6 caractere")
+    @NotBlank(message = "Password is mandatory")
+    @Size(min = 6, message = "Password must be at least 6 characters")
     private String password;
     private String role;
 
