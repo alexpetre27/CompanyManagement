@@ -1,4 +1,5 @@
 import { auth } from "@/auth";
+import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -164,9 +165,12 @@ export default async function DashboardPage() {
               <h2 className="text-sm font-bold text-[#1a1f36]">
                 Recent Projects
               </h2>
-              <button className="text-[11px] font-bold text-[#6366f1] hover:underline transition-all active:scale-95">
-                View all
-              </button>
+              <Link
+                href="/projects"
+                className="text-[11px] font-bold text-[#6366f1] hover:underline transition-all active:scale-95 cursor-pointer"
+              >
+                View All
+              </Link>
             </div>
             <div className="space-y-2">
               {data.recentProjects.length > 0 ? (
