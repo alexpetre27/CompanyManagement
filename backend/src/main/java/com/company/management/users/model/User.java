@@ -25,6 +25,8 @@ public class User {
 
     @Column(nullable = false)
     private String role; 
+    @Column(nullable = true)
+    private String avatar;
 
     public User() {
         this.createdAt = LocalDateTime.now();
@@ -49,4 +51,8 @@ public class User {
     public void setPassword(String password) { this.password = password; }
     public void setUsername(String username) { this.username = username; }
     public void setEmail(String email) { this.email = email; }
+    public String getAvatar() { return avatar; }
+    public void setAvatar(String avatar) { this.avatar = avatar; }
+
+   
 }

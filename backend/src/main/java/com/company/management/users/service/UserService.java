@@ -34,9 +34,11 @@ public class UserService {
         user.setUsername(dto.getUsername());
         user.setEmail(dto.getEmail());
         user.setPassword(passwordEncoder.encode(dto.getPassword()));
-        
         if (dto.getRole() != null) {
             user.setRole(dto.getRole().toUpperCase());
+        }
+        if (dto.getAvatar() != null) {
+            user.setAvatar(dto.getAvatar());
         }
 
         User saved = userRepository.save(user);
@@ -52,8 +54,9 @@ public class UserService {
     private UserResponseDTO mapToDTO(User user) {
         UserResponseDTO dto = new UserResponseDTO();
         dto.id = user.getId();
-        dto.username = user.getUsername();
+        dto.name = user.getUsername();
         dto.email = user.getEmail();
+        dto.avatar = user.getAvatar();
         dto.role = user.getRole();
         return dto;
     }

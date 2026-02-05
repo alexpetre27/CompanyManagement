@@ -18,7 +18,7 @@ public class RegisterRequestDTO {
     @Size(min = 6, message = "Password must be at least 6 characters")
     private String password;
     private String role;
-
+    private String avatar;
     public RegisterRequestDTO() {}
 
     public String getUsername() { return username; }
@@ -32,4 +32,12 @@ public class RegisterRequestDTO {
 
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
+
+    public String getAvatar() {
+        return avatar;
+    }
+
+    public void setAvatar(String avatar) {
+        this.avatar = avatar;   
+    }
 }
