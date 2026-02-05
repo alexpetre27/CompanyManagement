@@ -4,63 +4,83 @@ import com.company.management.projects.model.Microservice;
 import com.company.management.projects.repository.MicroserviceRepository;
 import com.company.management.tasks.model.Task;
 import com.company.management.tasks.repository.TaskRepository;
-import com.company.management.users.dto.UserResponseDTO;
+import com.company.management.users.model.User;
 import com.company.management.users.repository.UserRepository;
-import com.company.management.users.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/dashboard")
 public class DashboardController {
 
-    private final UserService userService;
     private final UserRepository userRepository;
     private final MicroserviceRepository microserviceRepository;
     private final TaskRepository taskRepository;
 
-    public DashboardController(UserService userService, 
-                               UserRepository userRepository,
+    public DashboardController(UserRepository userRepository,
                                MicroserviceRepository microserviceRepository,
                                TaskRepository taskRepository) {
-        this.userService = userService;
         this.userRepository = userRepository;
         this.microserviceRepository = microserviceRepository;
         this.taskRepository = taskRepository;
     }
 
     @GetMapping("/summary")
-    public ResponseEntity<DashboardData> getDashboardSummary(@RequestParam String email) {
+    public ResponseEntity<DashboardData> getDashboardSummary(
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false) String username) {
+
         DashboardData data = new DashboardData();
-      try {
-            UserResponseDTO realUser = userService.getUserByEmail(email);
-            
-            String dbUsername = realUser.username;
-            
-            if (dbUsername != null && !dbUsername.isEmpty()) {
-                dbUsername = dbUsername.substring(0, 1).toUpperCase() + dbUsername.substring(1);
-            } else {
-                dbUsername = "Unknown";
+        User foundUser = null;
+
+        try {
+            if (username != null && !username.isEmpty() && !username.equals("undefined")) {
+                Optional<User> u = userRepository.findByUsername(username);
+                if (u.isPresent()) {
+                    foundUser = u.get();
+                }
             }
-            
-            data.setUser(new UserDTO(dbUsername, realUser.email, null));
+
+            if (foundUser == null && email != null && !email.isEmpty() && !email.equals("undefined")) {
+                Optional<User> u = userRepository.findByEmail(email);
+                if (u.isPresent()) {
+                    foundUser = u.get();
+                }
+            }
+
+            if (foundUser != null) {
+                String displayName = foundUser.getUsername();
+                if (displayName != null && !displayName.isEmpty()) {
+                    displayName = displayName.substring(0, 1).toUpperCase() + displayName.substring(1);
+                }
+                data.setUser(new UserDTO(displayName, foundUser.getEmail(), null));
+            } else {
+                String fallback = (username != null && !username.equals("undefined")) ? username : "Guest";
+                if (fallback.equals("Guest") && email != null && email.contains("@")) {
+                    fallback = email.split("@")[0];
+                }
+                data.setUser(new UserDTO(fallback, email, null));
+            }
 
         } catch (Exception e) {
-  
-            String fallbackName = "Guest";
-            if (email != null && email.contains("@")) {
-                fallbackName = email.split("@")[0]; 
-            }
-            data.setUser(new UserDTO(fallbackName, email, null));
+            data.setUser(new UserDTO("Guest", email, null));
         }
 
+        String searchEmail = (foundUser != null) ? foundUser.getEmail() : email;
+        
         List<Microservice> realServices = microserviceRepository.findAll();
-        List<Task> realTasks = taskRepository.findByOwnerEmail(email);
+        List<Task> realTasks = new ArrayList<>();
+        
+        if (searchEmail != null && !searchEmail.isEmpty() && !searchEmail.equals("undefined")) {
+            realTasks = taskRepository.findByOwnerEmail(searchEmail);
+        }
+        
         long totalUsers = userRepository.count();
-        if (totalUsers == 0) totalUsers = 1; 
+        if (totalUsers == 0) totalUsers = 1;
 
         int activeProjectsCount = (int) realServices.stream()
             .filter(s -> "active".equalsIgnoreCase(s.getStatus()) || "running".equalsIgnoreCase(s.getStatus()))

@@ -3,16 +3,24 @@ import { type JWT } from "next-auth/jwt";
 import GitHub from "next-auth/providers/github";
 import Google from "next-auth/providers/google";
 import Credentials from "next-auth/providers/credentials";
+
 declare module "next-auth" {
   interface Session {
     accessToken?: string;
-    user: DefaultSession["user"];
+    user: {
+      username?: string;
+    } & DefaultSession["user"];
+  }
+  interface User {
+    username?: string;
+    token?: string;
   }
 }
 
 declare module "next-auth/jwt" {
   interface JWT {
     accessToken?: string;
+    username?: string;
   }
 }
 
@@ -60,14 +68,29 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     strategy: "jwt",
   },
   callbacks: {
-    async jwt({ token, account }) {
+    async jwt({ token, user, account }) {
       if (account?.access_token) {
         token.accessToken = account.access_token;
+      }
+
+      if (user) {
+        if (user.username) {
+          token.name = user.username;
+        }
+
+        if (user.token) {
+          token.accessToken = user.token;
+        }
       }
       return token;
     },
     async session({ session, token }) {
       session.accessToken = token.accessToken as string | undefined;
+
+      if (session.user && token.name) {
+        session.user.name = token.name;
+      }
+
       return session;
     },
   },

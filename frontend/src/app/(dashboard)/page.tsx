@@ -15,14 +15,14 @@ import { PageContainer, CardHover } from "@/components/PageContainer";
 import { StatCardProps } from "@/types/dashboard";
 
 interface Task {
-  id: number;
+  id: string;
   title: string;
   projectName: string;
   isCompleted: boolean;
 }
 
 interface Project {
-  id: number;
+  id: string;
   name: string;
   version: string;
   updatedAt: string;
@@ -53,17 +53,19 @@ export default async function DashboardPage() {
   }
 
   let data: DashboardData | null = null;
-  const apiUrl = process.env.INTERNAL_API_URL || "http://backend:8080/api";
+  const apiUrl = process.env.INTERNAL_API_URL || "http://localhost:8080/api";
 
   try {
-    const res = await fetch(`${apiUrl}/demo/dashboard`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        "X-User-Email": session.user.email || "",
+    const res = await fetch(
+      `${apiUrl}/dashboard/summary?email=${session.user.email || ""}&username=${session.user.name || ""}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        next: { revalidate: 0 },
       },
-      next: { revalidate: 0 },
-    });
+    );
 
     if (res.ok) {
       data = await res.json();
@@ -76,26 +78,13 @@ export default async function DashboardPage() {
     data = {
       user: { name: session.user.name || "User" },
       stats: {
-        activeProjects: 12,
-        teamMembers: 5,
-        hoursWorked: 140,
-        productivity: 85,
+        activeProjects: 0,
+        teamMembers: 0,
+        hoursWorked: 0,
+        productivity: 0,
       },
       recentProjects: [],
-      todayTasks: [
-        {
-          id: 1,
-          title: "Review Java Backend",
-          projectName: "Management App",
-          isCompleted: false,
-        },
-        {
-          id: 2,
-          title: "Fix Docker Network",
-          projectName: "DevOps",
-          isCompleted: true,
-        },
-      ],
+      todayTasks: [],
     };
   }
 
@@ -174,10 +163,9 @@ export default async function DashboardPage() {
             </div>
             <div className="space-y-2">
               {data.recentProjects.length > 0 ? (
-                data.recentProjects.map((project: Project) => (
+                data.recentProjects.map((project) => (
                   <ProjectRow
                     key={project.id}
-                    id={project.id}
                     name={project.name}
                     version={project.version}
                     updatedAt={project.updatedAt}
@@ -197,14 +185,20 @@ export default async function DashboardPage() {
               TODAY'S TASKS
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {data.todayTasks.map((task: Task) => (
-                <TaskItemMini
-                  key={task.id}
-                  label={task.title}
-                  sub={task.projectName}
-                  isCompleted={task.isCompleted}
-                />
-              ))}
+              {data.todayTasks.length > 0 ? (
+                data.todayTasks.map((task) => (
+                  <TaskItemMini
+                    key={task.id}
+                    label={task.title}
+                    sub={task.projectName}
+                    isCompleted={task.isCompleted}
+                  />
+                ))
+              ) : (
+                <p className="text-xs text-slate-400 p-2 text-center col-span-2">
+                  No tasks for today.
+                </p>
+              )}
             </div>
           </Card>
         </div>
@@ -274,7 +268,17 @@ function StatCard({ icon, label, value, trend, color }: StatCardProps) {
   );
 }
 
-function ProjectRow({ name, version, updatedAt, teamCount }: Project) {
+function ProjectRow({
+  name,
+  version,
+  updatedAt,
+  teamCount,
+}: {
+  name: string;
+  version: string;
+  updatedAt: string;
+  teamCount: number;
+}) {
   return (
     <div className="flex items-center justify-between p-2 hover:bg-slate-50 rounded-xl transition-all duration-200 group cursor-pointer border border-transparent hover:border-slate-100 active:scale-[0.98]">
       <div className="flex items-center gap-3">
@@ -308,13 +312,15 @@ function ProjectRow({ name, version, updatedAt, teamCount }: Project) {
   );
 }
 
-interface TaskItemMiniProps {
+function TaskItemMini({
+  label,
+  sub,
+  isCompleted,
+}: {
   label: string;
   sub: string;
   isCompleted: boolean;
-}
-
-function TaskItemMini({ label, sub, isCompleted }: TaskItemMiniProps) {
+}) {
   return (
     <div className="flex items-center gap-3 p-3 border border-slate-50 rounded-2xl hover:border-indigo-100 hover:bg-slate-50/50 transition-all duration-200 cursor-pointer group bg-white active:scale-[0.98]">
       <div
