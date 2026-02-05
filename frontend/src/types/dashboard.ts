@@ -1,3 +1,12 @@
+import { Project } from "./project";
+
+export interface Task {
+  id: string;
+  title: string;
+  projectName: string;
+  isCompleted: boolean;
+}
+
 export interface DashboardData {
   user: {
     name: string;
@@ -10,19 +19,8 @@ export interface DashboardData {
     hoursWorked: number;
     productivity: number;
   };
-  recentProjects: Array<{
-    id: string;
-    name: string;
-    version: string;
-    updatedAt: string;
-    teamCount: number;
-  }>;
-  todayTasks: Array<{
-    id: string;
-    title: string;
-    projectName: string;
-    isCompleted: boolean;
-  }>;
+  recentProjects: Project[];
+  todayTasks: Task[];
 }
 
 export interface StatCardProps {

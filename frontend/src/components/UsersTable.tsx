@@ -24,7 +24,7 @@ export function UsersTable({ initialUsers, currentUserRole }: UsersTableProps) {
 
   const filteredUsers = initialUsers.filter(
     (user) =>
-      user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
@@ -79,11 +79,11 @@ export function UsersTable({ initialUsers, currentUserRole }: UsersTableProps) {
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
                       <div className="w-9 h-9 bg-indigo-50 rounded-lg flex items-center justify-center text-indigo-600 font-bold text-xs">
-                        {getInitials(user.username)}
+                        {getInitials(user.name)}
                       </div>
                       <div>
                         <p className="font-bold text-slate-700 text-sm">
-                          {user.username}
+                          {user.name}
                         </p>
                         <div className="flex items-center gap-1 text-slate-400">
                           <Mail size={10} />

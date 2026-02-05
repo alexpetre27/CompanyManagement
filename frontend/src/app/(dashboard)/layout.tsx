@@ -20,7 +20,7 @@ export default async function DashboardLayout({
       <Sidebar />
 
       <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-10 scrollbar-hide">
-        <div className="max-w-[1400px] mx-auto animate-in fade-in slide-in-from-bottom-3 duration-700">
+        <div className="max-w-350 mx-auto animate-in fade-in slide-in-from-bottom-3 duration-700">
           {children}
         </div>
       </main>

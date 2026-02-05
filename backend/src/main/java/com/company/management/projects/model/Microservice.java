@@ -1,42 +1,86 @@
 package com.company.management.projects.model;
 
 import jakarta.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "microservices")
-
 public class Microservice {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     private String name;
-    private String status; 
     private String version;
-    private String url;
-    private String port;
+    private String status; 
+    private Integer port;  
     private String uptime;
 
+    
+    @Column(length = 2000) 
+    private String description;
+    
+    private String repoUrl; 
+    private String liveUrl; 
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "microservice_tech_stack", joinColumns = @JoinColumn(name = "microservice_id"))
+    @Column(name = "technology")
+    private List<String> techStack = new ArrayList<>();
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "microservice_team", joinColumns = @JoinColumn(name = "microservice_id"))
+    @Column(name = "member_name")
+    private List<String> teamMembers = new ArrayList<>();
+
     public Microservice() {}
-    public Microservice(String name) {
+
+    public Microservice(String name, String version, String status, Integer port, 
+                        String description, String repoUrl, String liveUrl, List<String> techStack, List<String> teamMembers) {
         this.name = name;
-        this.status = "inactive";
-        this.version = "1.0.0";
-        this.url = "http://localhost";
-        this.port = "8080";
+        this.version = version;
+        this.status = status;
+        this.port = port;
         this.uptime = "0 days";
+        this.description = description;
+        this.repoUrl = repoUrl;
+        this.liveUrl = liveUrl;
+        this.techStack = techStack;
+        this.teamMembers = teamMembers;
     }
+
+
     public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
     public String getName() { return name; }
-    public String getStatus() { return status; }
-    public String getVersion() { return version; }
-    public String getUrl() { return url; }
-    public String getPort() { return port; }
-    public String getUptime() { return uptime; }
     public void setName(String name) { this.name = name; }
-    public void setStatus(String status) { this.status = status; }
+
+    public String getVersion() { return version; }
     public void setVersion(String version) { this.version = version; }
-    public void setUrl(String url) { this.url = url; }
-    public void setPort(String port) { this.port = port; }
+
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+
+    public Integer getPort() { return port; }
+    public void setPort(Integer port) { this.port = port; }
+
+    public String getUptime() { return uptime; }
     public void setUptime(String uptime) { this.uptime = uptime; }
 
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+
+    public String getRepoUrl() { return repoUrl; }
+    public void setRepoUrl(String repoUrl) { this.repoUrl = repoUrl; }
+
+    public String getLiveUrl() { return liveUrl; }
+    public void setLiveUrl(String liveUrl) { this.liveUrl = liveUrl; }
+
+    public List<String> getTechStack() { return techStack; }
+    public void setTechStack(List<String> techStack) { this.techStack = techStack; }
+    public List<String> getTeamMembers() { return teamMembers; }
+    public void setTeamMembers(List<String> teamMembers) { this.teamMembers = teamMembers; }
 }

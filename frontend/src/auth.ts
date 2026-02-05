@@ -74,8 +74,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
 
       if (user) {
-        if (user.username) {
-          token.name = user.username;
+        if (user.name) {
+          token.name = user.name;
         }
 
         if (user.token) {

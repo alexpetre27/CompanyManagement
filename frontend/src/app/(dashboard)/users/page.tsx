@@ -24,7 +24,7 @@ export default async function UsersPage() {
         </div>
 
         {userRole === "ADMIN" && (
-          <Button className="bg-[#6366f1] hover:bg-[#4f46e5] text-white rounded-xl gap-2 shadow-lg shadow-indigo-100 transition-all duration-200 hover:scale-105 active:scale-95 font-bold text-xs h-10 px-5">
+          <Button className="bg-[#6366f1] hover:bg-indigo-600 text-white rounded-xl gap-2 shadow-lg shadow-indigo-100 transition-all duration-200 hover:scale-105 active:scale-95 font-bold text-xs h-10 px-5">
             <UserPlus size={16} />
             Add Member
           </Button>

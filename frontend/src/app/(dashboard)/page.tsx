@@ -8,38 +8,13 @@ import {
   Clock,
   TrendingUp,
   Zap,
-  LayoutGrid,
   ChevronRight,
 } from "lucide-react";
+import { DashboardData } from "@/types/dashboard";
 import { PageContainer, CardHover } from "@/components/PageContainer";
-import { StatCardProps } from "@/types/dashboard";
-
-interface Task {
-  id: string;
-  title: string;
-  projectName: string;
-  isCompleted: boolean;
-}
-
-interface Project {
-  id: string;
-  name: string;
-  version: string;
-  updatedAt: string;
-  teamCount: number;
-}
-
-interface DashboardData {
-  user: { name: string };
-  stats: {
-    activeProjects: number;
-    teamMembers: number;
-    hoursWorked: number;
-    productivity: number;
-  };
-  recentProjects: Project[];
-  todayTasks: Task[];
-}
+import { StatCard } from "@/components/StatCard";
+import { ProjectRow } from "@/components/RowProject";
+import { TaskItemMini } from "@/components/MiniTaskItem";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -76,7 +51,7 @@ export default async function DashboardPage() {
 
   if (!data) {
     data = {
-      user: { name: session.user.name || "User" },
+      user: { name: session.user.name || "User", email: "", image: null },
       stats: {
         activeProjects: 0,
         teamMembers: 0,
@@ -102,7 +77,7 @@ export default async function DashboardPage() {
         </div>
         <Button
           size="sm"
-          className="bg-[#6366f1] hover:bg-[#4f46e5] text-white rounded-xl px-4 py-2 gap-2 shadow-lg shadow-indigo-100 transition-all duration-200 hover:scale-105 active:scale-95 font-bold text-xs h-9"
+          className="bg-[#6366f1] hover:bg-indigo-600 text-white rounded-xl px-4 py-2 gap-2 shadow-lg shadow-indigo-100 transition-all duration-200 hover:scale-105 active:scale-95 font-bold text-xs h-9"
         >
           <Zap size={14} fill="currentColor" /> Boost Active
         </Button>
@@ -164,13 +139,7 @@ export default async function DashboardPage() {
             <div className="space-y-2">
               {data.recentProjects.length > 0 ? (
                 data.recentProjects.map((project) => (
-                  <ProjectRow
-                    key={project.id}
-                    name={project.name}
-                    version={project.version}
-                    updatedAt={project.updatedAt}
-                    teamCount={project.teamCount}
-                  />
+                  <ProjectRow key={project.id} {...project} />
                 ))
               ) : (
                 <p className="text-xs text-slate-400 p-2 text-center">
@@ -187,12 +156,7 @@ export default async function DashboardPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {data.todayTasks.length > 0 ? (
                 data.todayTasks.map((task) => (
-                  <TaskItemMini
-                    key={task.id}
-                    label={task.title}
-                    sub={task.projectName}
-                    isCompleted={task.isCompleted}
-                  />
+                  <TaskItemMini key={task.id} {...task} />
                 ))
               ) : (
                 <p className="text-xs text-slate-400 p-2 text-center col-span-2">
@@ -220,7 +184,7 @@ export default async function DashboardPage() {
             <div className="absolute -bottom-6 -right-6 w-28 h-28 bg-white/10 rounded-full blur-2xl transition-transform duration-500 group-hover:scale-150" />
           </Card>
 
-          <Card className="p-5 border-none shadow-sm rounded-[24px] bg-white min-h-[180px] transition-shadow duration-300 hover:shadow-md">
+          <Card className="p-5 border-none shadow-sm rounded-[24px] bg-white min-h-45 transition-shadow duration-300 hover:shadow-md">
             <div className="flex justify-between items-center mb-4">
               <span className="text-[11px] font-bold text-slate-400 uppercase">
                 ACTIVITY
@@ -237,111 +201,5 @@ export default async function DashboardPage() {
         </div>
       </div>
     </PageContainer>
-  );
-}
-
-function StatCard({ icon, label, value, trend, color }: StatCardProps) {
-  const colors: Record<string, string> = {
-    blue: "bg-blue-50 text-blue-500",
-    purple: "bg-purple-50 text-purple-500",
-    green: "bg-green-50 text-green-500",
-    orange: "bg-orange-50 text-orange-500",
-  };
-
-  return (
-    <Card className="p-3 border-none shadow-none bg-transparent h-full flex flex-col justify-between">
-      <div className="flex justify-between items-start mb-1">
-        <div className={`p-2 rounded-xl ${colors[color]}`}>{icon}</div>
-        <span className="text-[10px] font-bold text-green-500 bg-green-50 px-1.5 py-0.5 rounded-md">
-          {trend}
-        </span>
-      </div>
-      <div className="px-1 mt-1">
-        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">
-          {label}
-        </p>
-        <p className="text-lg font-black text-slate-800 tracking-tight leading-none mt-0.5">
-          {value}
-        </p>
-      </div>
-    </Card>
-  );
-}
-
-function ProjectRow({
-  name,
-  version,
-  updatedAt,
-  teamCount,
-}: {
-  name: string;
-  version: string;
-  updatedAt: string;
-  teamCount: number;
-}) {
-  return (
-    <div className="flex items-center justify-between p-2 hover:bg-slate-50 rounded-xl transition-all duration-200 group cursor-pointer border border-transparent hover:border-slate-100 active:scale-[0.98]">
-      <div className="flex items-center gap-3">
-        <div className="p-2 bg-white border border-slate-100 rounded-lg text-slate-400 group-hover:text-[#6366f1] transition-colors shadow-sm">
-          <LayoutGrid size={16} />
-        </div>
-        <div>
-          <h4 className="text-[13px] font-bold text-slate-700 leading-tight">
-            {name}{" "}
-            <span className="text-[10px] font-normal text-slate-400 ml-1">
-              {version}
-            </span>
-          </h4>
-          <p className="text-[10px] text-slate-400 mt-0.5">{updatedAt}</p>
-        </div>
-      </div>
-      <div className="flex -space-x-1.5 items-center">
-        {[...Array(Math.min(teamCount, 3))].map((_, i) => (
-          <div
-            key={i}
-            className="w-6 h-6 rounded-full border-2 border-white bg-slate-200"
-          />
-        ))}
-        {teamCount > 3 && (
-          <div className="w-6 h-6 rounded-full border-2 border-white bg-[#6366f1] text-[8px] text-white flex items-center justify-center font-bold">
-            +{teamCount - 3}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function TaskItemMini({
-  label,
-  sub,
-  isCompleted,
-}: {
-  label: string;
-  sub: string;
-  isCompleted: boolean;
-}) {
-  return (
-    <div className="flex items-center gap-3 p-3 border border-slate-50 rounded-2xl hover:border-indigo-100 hover:bg-slate-50/50 transition-all duration-200 cursor-pointer group bg-white active:scale-[0.98]">
-      <div
-        className={`w-1 h-8 rounded-full ${
-          isCompleted ? "bg-green-500" : "bg-indigo-500"
-        }`}
-      />
-      <div className="flex-1 min-w-0">
-        <p
-          className={`text-[12px] font-bold truncate ${
-            isCompleted ? "text-slate-400 line-through" : "text-slate-700"
-          }`}
-        >
-          {label}
-        </p>
-        <p className="text-[10px] text-slate-400 truncate">{sub}</p>
-      </div>
-      <ChevronRight
-        size={14}
-        className="text-slate-200 group-hover:text-indigo-300 transition-colors"
-      />
-    </div>
   );
 }
