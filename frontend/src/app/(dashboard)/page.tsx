@@ -13,7 +13,7 @@ import {
 import { DashboardData } from "@/types/dashboard";
 import { PageContainer, CardHover } from "@/components/PageContainer";
 import { StatCard } from "@/components/StatCard";
-import { ProjectRow } from "@/components/RowProject";
+import { ProjectRow } from "@/components/projects/RowProject";
 import { TaskItemMini } from "@/components/MiniTaskItem";
 
 export default async function DashboardPage() {
