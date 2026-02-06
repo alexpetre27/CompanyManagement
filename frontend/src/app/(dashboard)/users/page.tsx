@@ -1,36 +1,49 @@
-import { getUsers } from "@/lib/user.service";
+import { getUsers } from "@/lib/user.service"; // Asigura-te ca asta e calea corecta
 import { UsersTable } from "@/components/UsersTable";
 import { Button } from "@/components/ui/button";
-import { UserPlus } from "lucide-react";
+import { UserPlus, Users } from "lucide-react";
 import { auth } from "@/auth";
 import { PageContainer } from "@/components/PageContainer";
+import { redirect } from "next/navigation";
 
 export default async function UsersPage() {
-  const users = await getUsers();
   const session = await auth();
 
+  if (!session?.user) {
+    redirect("/login");
+  }
+
+  // Fetching users server-side (no mock data)
+  const users = await getUsers();
+
+  // Safe role check
   const userRole = (session?.user as { role?: string })?.role || "USER";
 
   return (
-    <PageContainer className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-2">
+    <PageContainer className="space-y-8">
+      {/* --- HEADER CONSISTENT CU PROJECTS --- */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-xl font-extrabold text-[#1a1f36]">
+          <h1 className="text-2xl font-black text-[#1a1f36] flex items-center gap-3">
+            <div className="p-2 bg-indigo-600 rounded-xl text-white shadow-lg shadow-indigo-200">
+              <Users size={24} />
+            </div>
             Team Members
           </h1>
-          <p className="text-[12px] text-slate-400 font-medium">
-            Manage user access and permissions.
+          <p className="text-sm text-slate-500 font-medium mt-2 ml-1">
+            Manage user access, roles and platform permissions.
           </p>
         </div>
 
-        {userRole === "ADMIN" && (
-          <Button className="bg-[#6366f1] hover:bg-indigo-600 text-white rounded-xl gap-2 shadow-lg shadow-indigo-100 transition-all duration-200 hover:scale-105 active:scale-95 font-bold text-xs h-10 px-5">
-            <UserPlus size={16} />
+        {userRole === "ROLE_ADMIN" && (
+          <Button className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-lg shadow-indigo-200 transition-all hover:-translate-y-0.5 active:translate-y-0 text-sm font-bold h-10 px-6">
+            <UserPlus size={18} className="mr-2" />
             Add Member
           </Button>
         )}
       </div>
 
+      {/* --- TABELUL INTERACTIV --- */}
       <UsersTable initialUsers={users} currentUserRole={userRole} />
     </PageContainer>
   );
