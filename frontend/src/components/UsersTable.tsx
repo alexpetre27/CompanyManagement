@@ -30,8 +30,10 @@ import {
   MoreHorizontal,
   ChevronDown,
   Trash2,
+  Briefcase,
 } from "lucide-react";
-import { User } from "@/types/user";
+import { User, FilterDropdownProps, UsersTableProps } from "@/types/user";
+import { ProjectResponse, FilterOption } from "@/types/project";
 
 function useDebounce<T>(value: T, delay = 250) {
   const [debounced, setDebounced] = useState(value);
@@ -40,13 +42,6 @@ function useDebounce<T>(value: T, delay = 250) {
     return () => clearTimeout(t);
   }, [value, delay]);
   return debounced;
-}
-
-interface FilterDropdownProps {
-  label: string;
-  value: string;
-  options: { label: string; value: string; icon?: React.ReactNode }[];
-  onChange: (val: string) => void;
 }
 
 function FilterDropdown({
@@ -74,11 +69,7 @@ function FilterDropdown({
       <button
         onClick={() => setOpen((v) => !v)}
         className={`flex items-center justify-between gap-2 px-3 py-2 text-[11px] font-bold uppercase tracking-wider rounded-xl min-w-[140px] transition-all
-          ${
-            value !== "ALL"
-              ? "bg-indigo-50 text-indigo-600 ring-1 ring-indigo-100"
-              : "bg-slate-50 text-slate-500 hover:bg-slate-100"
-          }`}
+          ${value !== "ALL" ? "bg-indigo-50 text-indigo-600 ring-1 ring-indigo-100" : "bg-white text-slate-500 ring-1 ring-slate-200 hover:bg-slate-50"}`}
       >
         <span className="flex items-center gap-2 truncate">
           <span className="opacity-50">{label}</span>
@@ -129,10 +120,29 @@ export function UsersTable({ initialUsers, currentUserRole }: UsersTableProps) {
   const debouncedSearch = useDebounce(search);
   const [role, setRole] = useState("ALL");
   const [status, setStatus] = useState("ALL");
+  const [project, setProject] = useState("ALL");
+  const [backendProjects, setBackendProjects] = useState<FilterOption[]>([]);
   const [sort, setSort] = useState<SortConfig>({
     key: "name",
     direction: "ascending",
   });
+
+  useEffect(() => {
+    async function fetchProjects() {
+      try {
+        const response = await fetch("/api/projects");
+        const data: ProjectResponse[] = await response.json();
+        const formatted: FilterOption[] = data.map((p) => ({
+          label: p.name,
+          value: p.id.toString(),
+        }));
+        setBackendProjects(formatted);
+      } catch (error) {
+        console.error("Failed to fetch projects:", error);
+      }
+    }
+    fetchProjects();
+  }, []);
 
   const users = useMemo(() => {
     let list = [...initialUsers];
@@ -146,16 +156,17 @@ export function UsersTable({ initialUsers, currentUserRole }: UsersTableProps) {
     if (role !== "ALL") list = list.filter((u) => u.role === role);
     if (status !== "ALL")
       list = list.filter((u) => u.active === (status === "ACTIVE"));
+    if (project !== "ALL") list = list.filter((u) => u.project === project);
 
     list.sort((a, b) => {
-      const aVal = a[sort.key] ?? "";
-      const bVal = b[sort.key] ?? "";
-      if (aVal < bVal) return sort.direction === "ascending" ? -1 : 1;
-      if (aVal > bVal) return sort.direction === "ascending" ? 1 : -1;
-      return 0;
+      const aVal = String(a[sort.key] ?? "");
+      const bVal = String(b[sort.key] ?? "");
+      return sort.direction === "ascending"
+        ? aVal.localeCompare(bVal)
+        : bVal.localeCompare(aVal);
     });
     return list;
-  }, [initialUsers, debouncedSearch, role, status, sort]);
+  }, [initialUsers, debouncedSearch, role, status, project, sort]);
 
   const handleSort = (key: keyof User) => {
     setSort((prev) => ({
@@ -183,7 +194,16 @@ export function UsersTable({ initialUsers, currentUserRole }: UsersTableProps) {
     setSearch("");
     setRole("ALL");
     setStatus("ALL");
+    setProject("ALL");
   };
+
+  const projectOptions = useMemo(
+    (): FilterOption[] => [
+      { label: "All", value: "ALL" },
+      ...backendProjects.map((p) => ({ ...p, icon: <Briefcase size={12} /> })),
+    ],
+    [backendProjects],
+  );
 
   return (
     <div className="space-y-6">
@@ -210,7 +230,10 @@ export function UsersTable({ initialUsers, currentUserRole }: UsersTableProps) {
             )}
           </div>
           <AnimatePresence>
-            {(search || role !== "ALL" || status !== "ALL") && (
+            {(search ||
+              role !== "ALL" ||
+              status !== "ALL" ||
+              project !== "ALL") && (
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -230,6 +253,12 @@ export function UsersTable({ initialUsers, currentUserRole }: UsersTableProps) {
         </div>
 
         <div className="flex gap-2">
+          <FilterDropdown
+            label="Project"
+            value={project}
+            onChange={setProject}
+            options={projectOptions}
+          />
           <FilterDropdown
             label="Role"
             value={role}
@@ -277,20 +306,18 @@ export function UsersTable({ initialUsers, currentUserRole }: UsersTableProps) {
         <Table>
           <TableHeader className="bg-slate-50/50">
             <TableRow className="hover:bg-transparent border-b border-slate-100">
-              {["name", "email", "role"].map((key) => (
+              {["name", "email", "role", "active"].map((key) => (
                 <TableHead
                   key={key}
                   onClick={() => handleSort(key as keyof User)}
                   className="h-12 cursor-pointer group text-[10px] font-bold uppercase tracking-widest text-slate-400 px-6"
                 >
                   <div className="flex items-center">
-                    {key} {sortIcon(key as keyof User)}
+                    {key === "active" ? "Status" : key}{" "}
+                    {sortIcon(key as keyof User)}
                   </div>
                 </TableHead>
               ))}
-              <TableHead className="h-12 text-[10px] font-bold uppercase tracking-widest text-slate-400 px-6">
-                Status
-              </TableHead>
               {currentUserRole === "ADMIN" && (
                 <TableHead className="h-12 w-10" />
               )}

@@ -5,6 +5,7 @@ export interface User {
   role: string;
   active?: boolean;
   avatar?: string;
+  project: string;
 }
 export interface FilterDropdownProps {
   label: string;
