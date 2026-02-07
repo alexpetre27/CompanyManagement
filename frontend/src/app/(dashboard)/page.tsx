@@ -10,11 +10,11 @@ import {
   Zap,
   ChevronRight,
 } from "lucide-react";
-import { DashboardData } from "@/types/dashboard";
 import { PageContainer, CardHover } from "@/components/PageContainer";
 import { StatCard } from "@/components/StatCard";
 import { ProjectRow } from "@/components/projects/RowProject";
 import { TaskItemMini } from "@/components/MiniTaskItem";
+import { getDashboardData } from "@/lib/dashboard.service";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -27,27 +27,7 @@ export default async function DashboardPage() {
     );
   }
 
-  let data: DashboardData | null = null;
-  const apiUrl = process.env.INTERNAL_API_URL || "http://localhost:8080/api";
-
-  try {
-    const res = await fetch(
-      `${apiUrl}/dashboard/summary?email=${session.user.email || ""}&username=${session.user.name || ""}`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        next: { revalidate: 0 },
-      },
-    );
-
-    if (res.ok) {
-      data = await res.json();
-    }
-  } catch (error) {
-    console.error(error);
-  }
+  let data = await getDashboardData();
 
   if (!data) {
     data = {

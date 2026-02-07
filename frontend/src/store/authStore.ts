@@ -13,21 +13,28 @@ export const useAuthStore = create<AuthState>((set) => ({
   token: typeof window !== "undefined" ? localStorage.getItem("token") : null,
 
   setAuth: (data) => {
-    localStorage.setItem("token", data.token);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("token", data.token);
+    }
+
     set({
       token: data.token,
       user: {
-        id: data.id,
         username: data.username,
-        email: data.email,
-        projectIds: data.projectIds,
+        role: data.role,
+        token: data.token,
       },
     });
   },
 
   logout: () => {
-    localStorage.removeItem("token");
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("token");
+    }
     set({ token: null, user: null });
-    window.location.href = "/login";
+
+    if (typeof window !== "undefined") {
+      window.location.href = "/login";
+    }
   },
 }));

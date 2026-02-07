@@ -1,27 +1,25 @@
-import { Microservice } from "@/types/microservice";
+import { getSession } from "next-auth/react";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api";
 
-export const getMicroservices = async (): Promise<Microservice[]> => {
-  if (typeof window === "undefined") return [];
+export const getMicroservices = async () => {
+  const session = await getSession();
+  const token = session?.accessToken;
 
-  const token = localStorage.getItem("token");
-  if (!token) throw new Error("UNAUTHORIZED");
-
-  const res = await fetch(`${BASE_URL}/microservices`, {
+  if (!token) {
+    throw new Error("Unauthorized: No token found");
+  }
+  const res = await fetch(`${BASE_URL}/projects/microservices`, {
+    method: "GET",
     headers: {
-      Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
     },
-    cache: "no-store",
   });
 
-  if (res.status === 401 || res.status === 403) {
-    window.location.href = "/login";
-    throw new Error("UNAUTHORIZED");
+  if (!res.ok) {
+    throw new Error(`Failed to fetch services: ${res.statusText}`);
   }
-
-  if (!res.ok) throw new Error(res.statusText);
 
   return res.json();
 };

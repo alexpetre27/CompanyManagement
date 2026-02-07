@@ -1,20 +1,24 @@
-export interface AuthRequestDTO {
-  username: string;
-  email: string;
-  password: string;
-}
+import { DefaultSession } from "next-auth";
+
 export interface LoginRequestDTO {
-  email: string;
+  identifier: string;
   password: string;
 }
 
 export interface LoginResponseDTO {
   token: string;
-  id: number;
-  email: string;
   username: string;
-  projectIds: number[];
+  role: string;
 }
+
+export interface UserCreateRequestDTO {
+  username: string;
+  email: string;
+  password: string;
+  role?: string;
+  avatar?: string;
+}
+
 export interface ErrorResponse {
   timestamp: string;
   status: number;
@@ -22,54 +26,50 @@ export interface ErrorResponse {
   message: string;
   path: string;
 }
-export interface CreateProjectRequestDTO {
-  name: string;
-  description: string;
-}
-export interface ProjectResponseDTO {
-  id: number;
-  name: string;
-  userIds: number[];
+
+export interface ApiResponse<T> {
+  data: T;
+  message?: string;
 }
 
 export interface UserResponseDTO {
   id: number;
   username: string;
   email: string;
-  projectIds: number[];
+  role: string;
+  avatar?: string;
 }
 
-export interface UserProjectDTO {
-  userId: number;
-  projectId: number;
-  projectName: string;
+export interface CreateProjectRequestDTO {
+  name: string;
+  description: string;
+  version: string;
+  repoUrl?: string;
+  liveUrl?: string;
+  techStack?: string[];
+  teamMembers?: string[];
 }
 
-export interface UserCreateRequestDTO {
-  username: string;
-  email: string;
-  password: string;
-  projectIds: number[];
-}
-
-export interface ApiResponse<T> {
-  data: T;
-  message?: string;
-}
 declare module "next-auth" {
+  interface Session {
+    accessToken?: string;
+    user: {
+      username?: string;
+      role?: string;
+    } & DefaultSession["user"];
+  }
+
   interface User {
     username?: string;
-    projectId?: number;
+    role?: string;
     token?: string;
   }
-  interface Session {
-    User: User & {
-      id?: number;
-      username?: string;
-      projectId?: number;
-      token?: string;
-      role?: string;
-    };
-    backendToken?: string;
+}
+
+declare module "next-auth/jwt" {
+  interface JWT {
+    accessToken?: string;
+    username?: string;
+    role?: string;
   }
 }

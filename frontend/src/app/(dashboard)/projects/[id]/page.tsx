@@ -18,21 +18,23 @@ import { TeamList } from "@/components/TeamList";
 
 async function getProjectData(
   id: string,
-  email: string,
+  token: string,
 ): Promise<Project | null> {
-  const apiUrl = process.env.INTERNAL_API_URL || "http://backend:8080/api";
+  const apiUrl = process.env.INTERNAL_API_URL || "http://localhost:8080/api";
 
   try {
-    const res = await fetch(`${apiUrl}/projects/${id}?email=${email}`, {
+    const res = await fetch(`${apiUrl}/projects/${id}`, {
       method: "GET",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
       next: { revalidate: 0 },
     });
 
     if (!res.ok) return null;
     return await res.json();
   } catch (error) {
-    console.error("Failed to fetch project details:", error);
     return null;
   }
 }
@@ -44,20 +46,23 @@ export default async function ProjectDetailsPage({
 }) {
   const session = await auth();
 
-  if (!session?.user) {
+  if (!session?.user || !session.accessToken) {
     redirect("/login");
   }
 
-  const project = await getProjectData(params.id, session.user.email || "");
+  const project = await getProjectData(params.id, session.accessToken);
 
   if (!project) {
     return notFound();
   }
 
-  const statusColors: Record<string, string> = {
-    ACTIVE: "bg-blue-50 text-blue-600 border-blue-100",
-    COMPLETED: "bg-green-50 text-green-600 border-green-100",
-    ON_HOLD: "bg-orange-50 text-orange-600 border-orange-100",
+  const getStatusColor = (status: string) => {
+    const colors: Record<string, string> = {
+      ACTIVE: "bg-blue-50 text-blue-600 border-blue-100",
+      COMPLETED: "bg-green-50 text-green-600 border-green-100",
+      ON_HOLD: "bg-orange-50 text-orange-600 border-orange-100",
+    };
+    return colors[status?.toUpperCase()] || "bg-slate-100 text-slate-500";
   };
 
   return (
@@ -78,11 +83,9 @@ export default async function ProjectDetailsPage({
               {project.name}
             </h1>
             <span
-              className={`px-2 py-0.5 rounded-lg text-[10px] font-bold border ${
-                statusColors[project.status] || "bg-slate-100 text-slate-500"
-              }`}
+              className={`px-2 py-0.5 rounded-lg text-[10px] font-bold border ${getStatusColor(project.status)}`}
             >
-              {project.status.replace("_", " ")}
+              {project.status ? project.status.replace("_", " ") : "UNKNOWN"}
             </span>
           </div>
           <p className="text-xs text-slate-400 font-medium">
@@ -124,7 +127,7 @@ export default async function ProjectDetailsPage({
               </p>
               <div className="flex items-center gap-2 mt-1 text-slate-700 font-medium text-sm">
                 <Calendar size={16} className="text-slate-400" />{" "}
-                {project.updatedAt}
+                {project.updatedAt || "N/A"}
               </div>
             </div>
 
