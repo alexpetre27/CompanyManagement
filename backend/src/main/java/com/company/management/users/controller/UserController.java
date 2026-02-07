@@ -1,6 +1,6 @@
 package com.company.management.users.controller;
 
-import com.company.management.users.dto.UserResponseDTO;
+import com.company.management.users.dto.UserDTOs.UserResponseDTO;
 import com.company.management.users.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -11,7 +11,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/users")
-@CrossOrigin(origins = "*") 
 public class UserController {
 
     private final UserService userService;
@@ -28,7 +27,7 @@ public class UserController {
     }
 
     @GetMapping
-     @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<UserResponseDTO>> getAllUsers() {
         return ResponseEntity.ok(userService.getAllUsers());
     }

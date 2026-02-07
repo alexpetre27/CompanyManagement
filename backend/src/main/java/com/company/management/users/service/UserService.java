@@ -1,15 +1,16 @@
 package com.company.management.users.service;
 
-import java.util.List;
-
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-import com.company.management.auth.dto.RegisterRequestDTO;
 import com.company.management.common.exception.ConflictException;
 import com.company.management.common.exception.ResourceNotFoundException;
-import com.company.management.users.dto.UserResponseDTO;
+import com.company.management.users.dto.UserDTOs.*;
 import com.company.management.users.model.User;
 import com.company.management.users.repository.UserRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class UserService {
@@ -22,24 +23,23 @@ public class UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public UserResponseDTO registerNewUser(RegisterRequestDTO dto) {
-        if (userRepository.findByUsername(dto.getUsername()).isPresent()) {
+    @Transactional
+    public UserResponseDTO registerNewUser(UserCreateRequestDTO dto) {
+        if (userRepository.existsByUsername(dto.username())) {
             throw new ConflictException("Username is already taken");
         }
-        if (userRepository.findByEmail(dto.getEmail()).isPresent()) {
+        if (userRepository.existsByEmail(dto.email())) {
             throw new ConflictException("Email is already registered");
         }
 
         User user = new User();
-        user.setUsername(dto.getUsername());
-        user.setEmail(dto.getEmail());
-        user.setPassword(passwordEncoder.encode(dto.getPassword()));
-        if (dto.getRole() != null) {
-            user.setRole(dto.getRole().toUpperCase());
-        }
-        if (dto.getAvatar() != null) {
-            user.setAvatar(dto.getAvatar());
-        }
+        user.setUsername(dto.username());
+        user.setEmail(dto.email());
+        user.setPassword(passwordEncoder.encode(dto.password()));
+        
+        // Default role USER, unless specified (si validat, ideal ar fi un Enum aici)
+        user.setRole(dto.role() != null ? dto.role().toUpperCase() : "USER");
+        user.setAvatar(dto.avatar());
 
         User saved = userRepository.save(user);
         return mapToDTO(saved);
@@ -47,32 +47,32 @@ public class UserService {
 
     public UserResponseDTO getUserByUsername(String username) {
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + username));
         return mapToDTO(user);
     }
 
-    private UserResponseDTO mapToDTO(User user) {
-        UserResponseDTO dto = new UserResponseDTO();
-        dto.id = user.getId();
-        dto.name = user.getUsername();
-        dto.email = user.getEmail();
-        dto.avatar = user.getAvatar();
-        dto.role = user.getRole();
-        return dto;
-    }
-    public UserResponseDTO getUserByEmail(String email) {
-    User user = userRepository.findByEmail(email)
-            .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email));
-    return mapToDTO(user);
-}
     public List<UserResponseDTO> getAllUsers() {
-        List<User> users = userRepository.findAll();
-        return users.stream().map(this::mapToDTO).toList();
+        return userRepository.findAll()
+                .stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
     }
+
+    @Transactional
     public void deleteUser(Long id) {
         if (!userRepository.existsById(id)) {
-            throw new ResourceNotFoundException("User not found");
+            throw new ResourceNotFoundException("User not found with id: " + id);
         }
         userRepository.deleteById(id);
+    }
+
+    private UserResponseDTO mapToDTO(User user) {
+        return new UserResponseDTO(
+            user.getId(),
+            user.getUsername(),
+            user.getEmail(),
+            user.getAvatar(),
+            user.getRole()
+        );
     }
 }

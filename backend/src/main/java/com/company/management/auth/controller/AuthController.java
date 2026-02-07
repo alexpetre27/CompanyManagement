@@ -1,13 +1,12 @@
 package com.company.management.auth.controller;
 
-import com.company.management.auth.dto.LoginRequestDTO;
-import com.company.management.auth.dto.LoginResponseDTO;
-import com.company.management.auth.dto.RegisterRequestDTO;
+import com.company.management.auth.dto.AuthDTOs.LoginRequestDTO;
+import com.company.management.auth.dto.AuthDTOs.LoginResponseDTO;
 import com.company.management.auth.service.AuthService;
+import com.company.management.users.dto.UserDTOs.UserCreateRequestDTO;
+import com.company.management.users.dto.UserDTOs.UserResponseDTO;    
 import com.company.management.users.service.UserService;
 import jakarta.validation.Valid;
-
-import org.jspecify.annotations.Nullable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -32,7 +31,7 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<@Nullable Object> register(@Valid @RequestBody RegisterRequestDTO dto) {
+    public ResponseEntity<UserResponseDTO> register(@Valid @RequestBody UserCreateRequestDTO dto) {
         return ResponseEntity.ok(userService.registerNewUser(dto));
     }
 }

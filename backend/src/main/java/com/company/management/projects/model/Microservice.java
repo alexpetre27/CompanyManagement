@@ -1,11 +1,16 @@
 package com.company.management.projects.model;
 
 import jakarta.persistence.*;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Table(name = "microservices")
+@EntityListeners(AuditingEntityListener.class)
 public class Microservice {
 
     @Id
@@ -14,16 +19,19 @@ public class Microservice {
 
     private String name;
     private String version;
-    private String status; 
-    private Integer port;  
+    private String status;
+    private Integer port;
     private String uptime;
 
-    
-    @Column(length = 2000) 
+    @Column(length = 2000)
     private String description;
     
-    private String repoUrl; 
-    private String liveUrl; 
+    private String repoUrl;
+    private String liveUrl;
+
+    @LastModifiedDate
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "microservice_tech_stack", joinColumns = @JoinColumn(name = "microservice_id"))
@@ -50,7 +58,6 @@ public class Microservice {
         this.techStack = techStack;
         this.teamMembers = teamMembers;
     }
-
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -79,8 +86,12 @@ public class Microservice {
     public String getLiveUrl() { return liveUrl; }
     public void setLiveUrl(String liveUrl) { this.liveUrl = liveUrl; }
 
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+
     public List<String> getTechStack() { return techStack; }
     public void setTechStack(List<String> techStack) { this.techStack = techStack; }
+
     public List<String> getTeamMembers() { return teamMembers; }
     public void setTeamMembers(List<String> teamMembers) { this.teamMembers = teamMembers; }
 }
