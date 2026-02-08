@@ -1,4 +1,4 @@
-import { getUsers } from "@/lib/user.service"; // Asigura-te ca asta e calea corecta
+import { getUsers } from "@/lib/user.service";
 import { UsersTable } from "@/components/UsersTable";
 import { Button } from "@/components/ui/button";
 import { UserPlus, Users } from "lucide-react";
@@ -13,15 +13,12 @@ export default async function UsersPage() {
     redirect("/login");
   }
 
-  // Fetching users server-side (no mock data)
   const users = await getUsers();
 
-  // Safe role check
   const userRole = (session?.user as { role?: string })?.role || "USER";
 
   return (
     <PageContainer className="space-y-8">
-      {/* --- HEADER CONSISTENT CU PROJECTS --- */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <h1 className="text-2xl font-black text-[#1a1f36] flex items-center gap-3">
@@ -43,7 +40,6 @@ export default async function UsersPage() {
         )}
       </div>
 
-      {/* --- TABELUL INTERACTIV --- */}
       <UsersTable initialUsers={users} currentUserRole={userRole} />
     </PageContainer>
   );

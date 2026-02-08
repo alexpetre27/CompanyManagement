@@ -17,3 +17,13 @@ export interface UsersTableProps {
   initialUsers: User[];
   currentUserRole: string;
 }
+export interface SettingsViewProps {
+  user: {
+    name: string;
+    email: string;
+    role: string;
+    avatar?: string | null;
+    notificationsEnabled?: boolean;
+    themePreference?: string;
+  };
+}

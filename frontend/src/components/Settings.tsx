@@ -13,17 +13,7 @@ import {
   updateUserPreferences,
 } from "@/lib/user.service";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-
-interface SettingsViewProps {
-  user: {
-    name: string;
-    email: string;
-    role: string;
-    avatar?: string | null;
-    notificationsEnabled?: boolean;
-    themePreference?: string;
-  };
-}
+import { SettingsViewProps } from "@/types/user";
 
 const tabs = [
   { id: "profile", label: "Profile", icon: User },

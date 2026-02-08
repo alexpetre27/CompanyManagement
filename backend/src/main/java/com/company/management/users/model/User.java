@@ -27,7 +27,11 @@ public class User {
     private String role; 
     @Column(nullable = true)
     private String avatar;
+@Column(name = "notifications_enabled")
+    private Boolean notificationsEnabled = true;
 
+    @Column(name = "theme_preference")
+    private String themePreference = "LIGHT";
     public User() {
         this.createdAt = LocalDateTime.now();
         this.role = "USER"; 
@@ -54,5 +58,8 @@ public class User {
     public String getAvatar() { return avatar; }
     public void setAvatar(String avatar) { this.avatar = avatar; }
 
-   
+    public Boolean getNotificationsEnabled() { return notificationsEnabled; }
+    public void setNotificationsEnabled(Boolean notificationsEnabled) { this.notificationsEnabled = notificationsEnabled; }
+    public String getThemePreference() { return themePreference; }
+    public void setThemePreference(String themePreference) { this.themePreference = themePreference; }
 }

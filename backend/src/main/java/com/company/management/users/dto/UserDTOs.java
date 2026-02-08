@@ -6,14 +6,29 @@ import jakarta.validation.constraints.Size;
 
 public class UserDTOs {
 
-    public record UserResponseDTO(
+public record UserResponseDTO(
         Long id,
-        String name,
+        String username,
         String email,
+        String role,
         String avatar,
-        String role
+        Boolean notificationsEnabled,
+        String themePreference
+    ) {}
+   
+    public record ChangePasswordDTO(
+        String oldPassword,
+        String newPassword
     ) {}
 
+    public record UserPreferencesDTO(
+        Boolean notificationsEnabled,
+        String themePreference
+    ) {}
+    public record UserUpdateRequestDTO(
+        String username,
+        String email
+    ) {}
     public record UserCreateRequestDTO(
         @NotBlank(message = "Username is required")
         @Size(min = 3, message = "Username must be at least 3 characters")

@@ -2,6 +2,7 @@ package com.company.management.auth.controller;
 
 import com.company.management.auth.dto.AuthDTOs.LoginRequestDTO;
 import com.company.management.auth.dto.AuthDTOs.LoginResponseDTO;
+import com.company.management.auth.dto.AuthDTOs.SocialLoginRequestDTO;
 import com.company.management.auth.service.AuthService;
 import com.company.management.users.dto.UserDTOs.UserCreateRequestDTO;
 import com.company.management.users.dto.UserDTOs.UserResponseDTO;    
@@ -33,5 +34,9 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<UserResponseDTO> register(@Valid @RequestBody UserCreateRequestDTO dto) {
         return ResponseEntity.ok(userService.registerNewUser(dto));
+    }
+    @PostMapping("/social")
+    public ResponseEntity<LoginResponseDTO> socialLogin(@RequestBody SocialLoginRequestDTO dto) {
+        return ResponseEntity.ok(authService.socialLogin(dto));
     }
 }

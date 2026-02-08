@@ -1,13 +1,12 @@
 package com.company.management.users.controller;
 
-import com.company.management.users.dto.UserDTOs.UserResponseDTO;
+import com.company.management.users.dto.UserDTOs.*;
 import com.company.management.users.service.UserService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
+import org.springframework.web.multipart.MultipartFile;
+import java.security.Principal;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/users")
@@ -20,22 +19,28 @@ public class UserController {
     }
 
     @GetMapping("/me")
-    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
-    public ResponseEntity<UserResponseDTO> getCurrentUser(Authentication authentication) {
-        String username = authentication.getName();
-        return ResponseEntity.ok(userService.getUserByUsername(username));
+    public ResponseEntity<UserResponseDTO> getMe(Principal principal) {
+        return ResponseEntity.ok(userService.getUserProfile(principal.getName()));
     }
 
-    @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<UserResponseDTO>> getAllUsers() {
-        return ResponseEntity.ok(userService.getAllUsers());
+    @PatchMapping("/me")
+    public ResponseEntity<UserResponseDTO> updateProfile(@RequestBody UserUpdateRequestDTO dto, Principal principal) {
+        return ResponseEntity.ok(userService.updateProfile(principal.getName(), dto));
     }
 
-    @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-        userService.deleteUser(id);
-        return ResponseEntity.noContent().build();
+    @PatchMapping("/me/preferences")
+    public ResponseEntity<UserResponseDTO> updatePreferences(@RequestBody UserPreferencesDTO dto, Principal principal) {
+        return ResponseEntity.ok(userService.updatePreferences(principal.getName(), dto));
+    }
+
+    @PatchMapping("/me/password")
+    public ResponseEntity<?> changePassword(@RequestBody ChangePasswordDTO dto, Principal principal) {
+        userService.changePassword(principal.getName(), dto);
+        return ResponseEntity.ok(Map.of("message", "Success"));
+    }
+
+    @PostMapping("/me/avatar")
+    public ResponseEntity<?> uploadAvatar(@RequestParam("file") MultipartFile file, Principal principal) {
+        return ResponseEntity.ok(Map.of("avatar", userService.uploadAvatar(principal.getName(), file)));
     }
 }

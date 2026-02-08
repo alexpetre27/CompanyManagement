@@ -49,20 +49,21 @@ export interface CreateProjectRequestDTO {
   techStack?: string[];
   teamMembers?: string[];
 }
-
 declare module "next-auth" {
   interface Session {
     accessToken?: string;
     user: {
       username?: string;
       role?: string;
+      avatar?: string | null;
     } & DefaultSession["user"];
   }
 
   interface User {
     username?: string;
-    role?: string;
     token?: string;
+    role?: string;
+    avatar?: string | null;
   }
 }
 
@@ -71,5 +72,6 @@ declare module "next-auth/jwt" {
     accessToken?: string;
     username?: string;
     role?: string;
+    avatar?: string | null;
   }
 }

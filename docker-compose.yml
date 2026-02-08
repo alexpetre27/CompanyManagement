@@ -18,9 +18,12 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/management_db
       SPRING_DATASOURCE_USERNAME: user
       SPRING_DATASOURCE_PASSWORD: password
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
       AUTH_SECRET: ${AUTH_SECRET}
     depends_on:
       - db
+    volumes:
+      - ./uploads:/app/uploads
 
   frontend:
     build: ./frontend

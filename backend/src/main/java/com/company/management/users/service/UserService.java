@@ -1,69 +1,127 @@
 package com.company.management.users.service;
 
-import com.company.management.common.exception.ConflictException;
-import com.company.management.common.exception.ResourceNotFoundException;
 import com.company.management.users.dto.UserDTOs.*;
 import com.company.management.users.model.User;
 import com.company.management.users.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.util.StringUtils;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import java.io.IOException;
+import java.nio.file.*;
+import java.util.UUID;
 
 @Service
 public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final String UPLOAD_DIR = "uploads/";
 
     public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
-    @Transactional
     public UserResponseDTO registerNewUser(UserCreateRequestDTO dto) {
-        if (userRepository.existsByUsername(dto.username())) {
-            throw new ConflictException("Username is already taken");
+        if (userRepository.findByUsername(dto.username()).isPresent()) {
+            throw new RuntimeException("Username already exists");
         }
-        if (userRepository.existsByEmail(dto.email())) {
-            throw new ConflictException("Email is already registered");
+        if (userRepository.findByEmail(dto.email()).isPresent()) {
+            throw new RuntimeException("Email already exists");
         }
 
         User user = new User();
         user.setUsername(dto.username());
         user.setEmail(dto.email());
         user.setPassword(passwordEncoder.encode(dto.password()));
+        user.setRole("USER");
+        user.setNotificationsEnabled(true);
+        user.setThemePreference("LIGHT");
         
-        // Default role USER, unless specified (si validat, ideal ar fi un Enum aici)
-        user.setRole(dto.role() != null ? dto.role().toUpperCase() : "USER");
-        user.setAvatar(dto.avatar());
-
-        User saved = userRepository.save(user);
-        return mapToDTO(saved);
-    }
-
-    public UserResponseDTO getUserByUsername(String username) {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + username));
-        return mapToDTO(user);
-    }
-
-    public List<UserResponseDTO> getAllUsers() {
-        return userRepository.findAll()
-                .stream()
-                .map(this::mapToDTO)
-                .collect(Collectors.toList());
-    }
-
-    @Transactional
-    public void deleteUser(Long id) {
-        if (!userRepository.existsById(id)) {
-            throw new ResourceNotFoundException("User not found with id: " + id);
+        if (dto.avatar() != null && !dto.avatar().isEmpty()) {
+            user.setAvatar(dto.avatar());
         }
-        userRepository.deleteById(id);
+
+        return mapToDTO(userRepository.save(user));
+    }
+
+    public UserResponseDTO getUserProfile(String username) {
+        return mapToDTO(getUserOrThrow(username));
+    }
+
+    public UserResponseDTO updateProfile(String currentUsername, UserUpdateRequestDTO dto) {
+        User currentUser = getUserOrThrow(currentUsername);
+
+        if (dto.username() != null && !dto.username().trim().isEmpty() && !dto.username().equals(currentUser.getUsername())) {
+            userRepository.findByUsername(dto.username())
+                .filter(u -> !u.getId().equals(currentUser.getId()))
+                .ifPresent(u -> { throw new RuntimeException("Username already taken"); });
+            currentUser.setUsername(dto.username());
+        }
+
+        if (dto.email() != null && !dto.email().trim().isEmpty() && !dto.email().equals(currentUser.getEmail())) {
+            userRepository.findByEmail(dto.email())
+                .filter(u -> !u.getId().equals(currentUser.getId()))
+                .ifPresent(u -> { throw new RuntimeException("Email already taken"); });
+            currentUser.setEmail(dto.email());
+        }
+
+        return mapToDTO(userRepository.save(currentUser));
+    }
+
+    public UserResponseDTO updatePreferences(String username, UserPreferencesDTO dto) {
+        User user = getUserOrThrow(username);
+
+        if (dto.notificationsEnabled() != null) {
+            user.setNotificationsEnabled(dto.notificationsEnabled());
+        }
+        if (dto.themePreference() != null) {
+            user.setThemePreference(dto.themePreference());
+        }
+
+        return mapToDTO(userRepository.save(user));
+    }
+
+    public void changePassword(String username, ChangePasswordDTO dto) {
+        User user = getUserOrThrow(username);
+
+        if (!passwordEncoder.matches(dto.oldPassword(), user.getPassword())) {
+            throw new RuntimeException("Old password is incorrect");
+        }
+
+        user.setPassword(passwordEncoder.encode(dto.newPassword()));
+        userRepository.save(user);
+    }
+
+    public String uploadAvatar(String username, MultipartFile file) {
+        User user = getUserOrThrow(username);
+
+        try {
+            String originalName = StringUtils.cleanPath(file.getOriginalFilename());
+            if(originalName.contains("..")) throw new RuntimeException("Invalid path");
+
+            Path uploadPath = Paths.get(UPLOAD_DIR);
+            if (!Files.exists(uploadPath)) Files.createDirectories(uploadPath);
+
+            String fileName = UUID.randomUUID().toString() + "_" + originalName;
+            Path filePath = uploadPath.resolve(fileName);
+            Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+
+            String avatarUrl = "/uploads/" + fileName;
+            user.setAvatar(avatarUrl);
+            userRepository.save(user);
+
+            return avatarUrl;
+        } catch (IOException e) {
+            throw new RuntimeException("Upload failed", e);
+        }
+    }
+
+    private User getUserOrThrow(String username) {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found: " + username));
     }
 
     private UserResponseDTO mapToDTO(User user) {
@@ -71,8 +129,10 @@ public class UserService {
             user.getId(),
             user.getUsername(),
             user.getEmail(),
+            user.getRole(),
             user.getAvatar(),
-            user.getRole()
+            user.getNotificationsEnabled(),
+            user.getThemePreference()
         );
     }
 }
