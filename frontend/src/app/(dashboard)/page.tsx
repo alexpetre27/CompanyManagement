@@ -10,24 +10,45 @@ import {
   FolderOpen,
   CalendarDays,
   ArrowUpRight,
+  ShieldAlert,
+  Server,
+  Activity,
+  UserPlus,
 } from "lucide-react";
 import { PageContainer } from "@/components/PageContainer";
 import { ProjectRow } from "@/components/projects/RowProject";
 import { TasksCard } from "@/components/TasksCard";
-import { getDashboardData } from "@/lib/dashboard.service";
-import { getProjectsServer } from "@/types/data";
 import { StatTile } from "@/components/StatTitle";
+import { SystemHealthCard } from "@/components/SystemHealthCard";
+import { getDashboardData } from "@/lib/dashboard.service";
+import { getSystemStats } from "@/lib/admin.service";
+import { SystemEvent } from "@/types/dashboard";
+import { getProjectsServer, getUsersServer } from "@/types/data";
+
+interface SessionUser {
+  name?: string | null;
+  email?: string | null;
+  image?: string | null;
+  role?: string;
+  id?: string;
+}
+
 export default async function DashboardPage() {
   const session = await auth();
   if (!session || !session.user) redirect("/login");
 
-  const [dashboardData, projects] = await Promise.all([
+  const user = session.user as SessionUser;
+  const isAdmin = user.role === "ADMIN";
+
+  const [dashboardData, projects, users, adminStats] = await Promise.all([
     getDashboardData(),
     getProjectsServer(),
+    getUsersServer(),
+    isAdmin ? getSystemStats() : Promise.resolve(null),
   ]);
 
   const data = dashboardData || {
-    user: { name: session.user.name || "User" },
+    user: { name: user.name || "User", email: "", image: null },
     stats: {
       activeProjects: 0,
       teamMembers: 0,
@@ -38,12 +59,17 @@ export default async function DashboardPage() {
     todayTasks: [],
   };
 
-  const firstName = data.user.name.split(" ")[0];
+  const firstName = data.user.name ? data.user.name.split(" ")[0] : "User";
+
   const today = new Date().toLocaleDateString("en-US", {
     weekday: "long",
     day: "numeric",
     month: "long",
   });
+
+  const completedTasksCount = data.todayTasks
+    ? data.todayTasks.filter((t) => t.isCompleted).length
+    : 0;
 
   return (
     <PageContainer className="space-y-8 pb-10">
@@ -51,13 +77,15 @@ export default async function DashboardPage() {
         <div>
           <h1 className="text-3xl font-black text-[#1a1f36] tracking-tight">
             Hello,{" "}
-            <span className="text-transparent bg-clip-text bg-linear-to-r from-indigo-600 to-violet-600">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600">
               {firstName}
             </span>
             !
           </h1>
           <p className="text-sm text-slate-500 font-medium mt-1">
-            Let's make today productive.
+            {isAdmin
+              ? "System overview and administrative controls."
+              : "Let's make today productive."}
           </p>
         </div>
 
@@ -69,34 +97,96 @@ export default async function DashboardPage() {
         </div>
       </header>
 
+      {isAdmin && adminStats && (
+        <div className="bg-slate-900 rounded-[32px] p-6 text-white shadow-xl shadow-slate-200/50">
+          <div className="flex items-center gap-2 mb-6 opacity-80">
+            <ShieldAlert size={18} className="text-emerald-400" />
+            <span className="text-xs font-mono font-bold uppercase tracking-widest">
+              Admin Command Row
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="bg-white/10 p-4 rounded-2xl backdrop-blur-md border border-white/5">
+              <div className="flex items-center gap-3 mb-2 text-indigo-200">
+                <Users size={18} />
+                <span className="text-xs font-bold uppercase">Total Users</span>
+              </div>
+              <p className="text-2xl font-black">{adminStats.totalUsers}</p>
+              <p className="text-[10px] text-emerald-300">
+                +{adminStats.newUsersToday} today
+              </p>
+            </div>
+
+            <div className="bg-white/10 p-4 rounded-2xl backdrop-blur-md border border-white/5">
+              <div className="flex items-center gap-3 mb-2 text-indigo-200">
+                <Server size={18} />
+                <span className="text-xs font-bold uppercase">Server Load</span>
+              </div>
+              <p className="text-2xl font-black">{adminStats.serverLoad}</p>
+              <p className="text-[10px] text-slate-300">Optimal range</p>
+            </div>
+
+            <div className="bg-white/10 p-4 rounded-2xl backdrop-blur-md border border-white/5">
+              <div className="flex items-center gap-3 mb-2 text-indigo-200">
+                <Activity size={18} />
+                <span className="text-xs font-bold uppercase">
+                  Active Sessions
+                </span>
+              </div>
+              <p className="text-2xl font-black">{adminStats.activeSessions}</p>
+              <p className="text-[10px] text-slate-300">Currently online</p>
+            </div>
+
+            <div className="bg-white/10 p-4 rounded-2xl backdrop-blur-md border border-white/5">
+              <div className="flex justify-between items-start">
+                <div>
+                  <div className="flex items-center gap-3 mb-2 text-rose-200">
+                    <ShieldAlert size={18} />
+                    <span className="text-xs font-bold uppercase">Alerts</span>
+                  </div>
+                  <p className="text-2xl font-black">{adminStats.errorCount}</p>
+                </div>
+                <Link
+                  href="/admin"
+                  className="px-3 py-1 bg-white text-slate-900 text-[10px] font-bold rounded-full hover:bg-slate-200 transition"
+                >
+                  Console &rarr;
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatTile
           icon={<Briefcase size={20} />}
           label="Active Projects"
           value={data.stats.activeProjects}
           color="indigo"
-          trend="+2.5%"
+          trend=""
         />
         <StatTile
           icon={<Users size={20} />}
           label="Team Members"
           value={data.stats.teamMembers}
           color="purple"
-          trend="+1 new"
+          trend=""
         />
         <StatTile
           icon={<Clock size={20} />}
           label="Hours Tracked"
           value={`${data.stats.hoursWorked}h`}
           color="emerald"
-          trend="12% more"
+          trend=""
         />
         <StatTile
           icon={<TrendingUp size={20} />}
           label="Productivity"
           value={`${data.stats.productivity}%`}
           color="orange"
-          trend="+5.4%"
+          trend=""
         />
       </div>
 
@@ -119,7 +209,7 @@ export default async function DashboardPage() {
             </div>
 
             <div className="p-2">
-              {data.recentProjects.length > 0 ? (
+              {data.recentProjects && data.recentProjects.length > 0 ? (
                 <div className="space-y-1">
                   {data.recentProjects.map((p) => (
                     <div
@@ -131,7 +221,7 @@ export default async function DashboardPage() {
                   ))}
                 </div>
               ) : (
-                <div className="py-6 flex flex-col items-center justify-center text-slate-300 bg-slate-50/30 rounded-xl m-1 border border-dashed border-slate-100">
+                <div className="py-8 flex flex-col items-center justify-center text-slate-300 bg-slate-50/50 rounded-xl m-1 border border-dashed border-slate-100">
                   <span className="text-xs font-medium mb-1">
                     No recent projects
                   </span>
@@ -146,17 +236,51 @@ export default async function DashboardPage() {
             </div>
           </Card>
 
-          <TasksCard tasks={data.todayTasks} projects={projects} />
+          <TasksCard
+            tasks={data.todayTasks || []}
+            projects={projects || []}
+            users={users || []}
+            currentUser={user}
+          />
+
+          {isAdmin && adminStats && adminStats.systemEvents && (
+            <Card className="rounded-[24px] border-none shadow-sm bg-white p-6">
+              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">
+                System Activity Log
+              </h3>
+              <div className="space-y-4">
+                {adminStats.systemEvents.map((event: SystemEvent) => (
+                  <div
+                    key={event.id}
+                    className="flex items-center justify-between text-sm"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-2 h-2 rounded-full bg-slate-200"></div>
+                      <span className="font-bold text-slate-700">
+                        {event.action}
+                      </span>
+                      <span className="text-slate-400 text-xs">
+                        by {event.user}
+                      </span>
+                    </div>
+                    <span className="text-xs font-mono text-slate-400">
+                      {event.time}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
         </div>
 
         <div className="col-span-12 lg:col-span-4 space-y-6">
-          <Card className="p-6 rounded-[24px] border-none shadow-lg shadow-indigo-100 bg-linear-to-br from-[#6366f1] to-[#8b5cf6] text-white relative overflow-hidden">
+          <Card className="p-6 rounded-[24px] border-none shadow-lg shadow-indigo-100 bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] text-white relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none" />
 
             <div className="relative z-10">
               <div className="flex justify-between items-center mb-4">
                 <span className="px-2 py-0.5 rounded-md bg-white/20 backdrop-blur-md text-[10px] font-bold uppercase tracking-wider text-white border border-white/10">
-                  Status
+                  Daily Goal
                 </span>
                 <TrendingUp size={16} className="text-white/80" />
               </div>
@@ -166,37 +290,44 @@ export default async function DashboardPage() {
               </h3>
               <p className="text-xs text-indigo-100 font-medium opacity-90 mb-4">
                 You have completed{" "}
-                <span className="text-white font-bold">3 tasks</span>. Keep
-                going!
+                <span className="text-white font-bold">
+                  {completedTasksCount} tasks
+                </span>
+                . Keep going!
               </p>
 
               <div className="h-1.5 bg-black/20 rounded-full overflow-hidden backdrop-blur-sm">
-                <div className="h-full w-3/4 bg-white rounded-full shadow-[0_0_10px_rgba(255,255,255,0.5)]" />
+                <div
+                  className="h-full bg-white rounded-full shadow-[0_0_10px_rgba(255,255,255,0.5)] transition-all duration-1000"
+                  style={{ width: `${data.stats.productivity}%` }}
+                />
               </div>
             </div>
           </Card>
 
-          <Card className="p-4 rounded-4xl border border-slate-100 shadow-sm bg-white">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-xs font-bold text-slate-700 uppercase">
-                System Status
-              </h3>
-              <div className="flex items-center gap-1.5">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-[10px] font-bold text-emerald-600">
-                  Stable
-                </span>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-slate-500">Database</span>
-                <span className="font-mono text-slate-700">99.9%</span>
-              </div>
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-slate-500">API</span>
-                <span className="font-mono text-slate-700">14ms</span>
-              </div>
+          <SystemHealthCard />
+
+          <Card className="p-5 rounded-[24px] border border-slate-100 shadow-sm bg-white">
+            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">
+              Quick Actions
+            </h3>
+            <div className="grid grid-cols-2 gap-2">
+              <Link
+                href="/projects"
+                className="flex flex-col items-center justify-center p-3 rounded-xl bg-slate-50 hover:bg-indigo-50 hover:text-indigo-600 transition text-slate-600"
+              >
+                <FolderOpen size={18} className="mb-1" />
+                <span className="text-[10px] font-bold">New Project</span>
+              </Link>
+              {isAdmin && (
+                <Link
+                  href="/register"
+                  className="flex flex-col items-center justify-center p-3 rounded-xl bg-slate-50 hover:bg-emerald-50 hover:text-emerald-600 transition text-slate-600"
+                >
+                  <UserPlus size={18} className="mb-1" />
+                  <span className="text-[10px] font-bold">Add User</span>
+                </Link>
+              )}
             </div>
           </Card>
         </div>

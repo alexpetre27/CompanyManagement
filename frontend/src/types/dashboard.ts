@@ -1,27 +1,57 @@
 import { AlertCircle, CheckCircle2, Flame } from "lucide-react";
 import { Project } from "./project";
 
+export type DifficultyLevel = "LOW" | "MEDIUM" | "HIGH";
+
 export interface Task {
   id: string;
   title: string;
   projectName: string;
   isCompleted: boolean;
+  difficulty?: DifficultyLevel;
+}
+
+export interface UserWithRole {
+  name?: string | null;
+  email?: string | null;
+  image?: string | null;
+  role?: string;
+}
+
+export interface DashboardUser {
+  name: string;
+  email: string;
+  image: string | null;
+}
+
+export interface DashboardStats {
+  activeProjects: number;
+  teamMembers: number;
+  hoursWorked: number;
+  productivity: number;
 }
 
 export interface DashboardData {
-  user: {
-    name: string;
-    email: string;
-    image: string | null;
-  };
-  stats: {
-    activeProjects: number;
-    teamMembers: number;
-    hoursWorked: number;
-    productivity: number;
-  };
+  user: DashboardUser;
+  stats: DashboardStats;
   recentProjects: Project[];
   todayTasks: Task[];
+}
+
+export interface SystemEvent {
+  id: number;
+  action: string;
+  user: string;
+  time: string;
+}
+
+export interface AdminStats {
+  totalUsers: number;
+  newUsersToday: number;
+  serverLoad: string;
+  errorCount: number;
+  activeSessions: number;
+  systemEvents: SystemEvent[];
 }
 
 export interface StatCardProps {
@@ -29,14 +59,31 @@ export interface StatCardProps {
   label: string;
   value: string | number;
   trend: string;
-  color: "blue" | "purple" | "green" | "orange";
+  color: "blue" | "purple" | "green" | "orange" | "emerald" | "indigo";
 }
-export type DifficultyLevel = "LOW" | "MEDIUM" | "HIGH";
+
 export interface CreateTaskDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   projects: Project[];
 }
+
+export interface DifficultySelectorProps {
+  value: DifficultyLevel;
+  onChange: (level: DifficultyLevel) => void;
+}
+
+export interface TasksCardProps {
+  tasks: Task[];
+  projects: Project[];
+}
+
+export interface Log {
+  time: string;
+  type: "INFO" | "ERROR" | "SUCCESS";
+  msg: string;
+}
+
 export const themeConfig = {
   LOW: {
     bg: "bg-emerald-50/30",
@@ -66,16 +113,22 @@ export const themeConfig = {
     gradient: "from-rose-50/50 to-white",
   },
 };
-export interface DifficultySelectorProps {
-  value: DifficultyLevel;
-  onChange: (level: DifficultyLevel) => void;
-}
-export interface TasksCardProps {
-  tasks: Task[];
-  projects: Project[];
-}
-export interface Log {
+ export interface SystemEvent {
+  id: number;
+  action: string;
+  user: string;
   time: string;
-  type: "INFO" | "ERROR" | "SUCCESS";
-  msg: string;
+}
+
+export interface AdminStats {
+  totalUsers: number;
+  newUsersToday: number;
+  serverLoad: string;
+  errorCount: number;
+  activeSessions: number;
+  systemEvents: SystemEvent[];
+}
+
+export interface SessionUser {
+  role?: string;
 }

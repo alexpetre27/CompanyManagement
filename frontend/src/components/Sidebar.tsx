@@ -26,8 +26,8 @@ export function Sidebar({ role }: SidebarProps) {
 
   const menuItems = [
     { icon: LayoutDashboard, label: "Overview", href: "/" },
-    { icon: Briefcase, label: "Proiecte", href: "/projects" },
-    { icon: Users, label: "Echipă", href: "/users" },
+    { icon: Briefcase, label: "Projects", href: "/projects" },
+    { icon: Users, label: "Team", href: "/users" },
 
     ...(isAdmin
       ? [
@@ -44,7 +44,7 @@ export function Sidebar({ role }: SidebarProps) {
         ]
       : []),
 
-    { icon: Settings, label: "Setări", href: "/settings" },
+    { icon: Settings, label: "Settings", href: "/settings" },
   ];
 
   const handleLogout = () => {

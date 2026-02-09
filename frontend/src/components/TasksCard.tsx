@@ -7,7 +7,19 @@ import { Plus, Coffee } from "lucide-react";
 import { TaskItemMini } from "@/components/MiniTaskItem";
 import { CreateTaskDialog } from "@/components/CreateTaskDialog";
 import { TasksCardProps } from "@/types/dashboard";
-export function TasksCard({ tasks, projects }: TasksCardProps) {
+import { User } from "@/types/user";
+
+interface ExtendedTasksCardProps extends TasksCardProps {
+  users?: User[];
+  currentUser?: { role?: string };
+}
+
+export function TasksCard({
+  tasks,
+  projects,
+  users = [],
+  currentUser,
+}: ExtendedTasksCardProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   return (
@@ -73,6 +85,8 @@ export function TasksCard({ tasks, projects }: TasksCardProps) {
         isOpen={isDialogOpen}
         onOpenChange={setIsDialogOpen}
         projects={projects}
+        users={users}
+        currentUser={currentUser}
       />
     </>
   );
