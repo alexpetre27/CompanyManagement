@@ -54,7 +54,7 @@ public class DataSeeder implements CommandLineRunner {
             Microservice m1 = new Microservice(
                 "Management System",
                 "v2.1.0",
-                "active",
+                "ACTIVE",
                 8080,
                 "A comprehensive SaaS dashboard for managing agile teams and microservices. " +
                 "Features include real-time analytics, user management, and project tracking. " +
@@ -68,7 +68,7 @@ public class DataSeeder implements CommandLineRunner {
             Microservice m2 = new Microservice(
                 "E-commerce API",
                 "v1.5.2",
-                "active",
+                "ACTIVE",
                 5000,
                 "Scalable REST API for a high-traffic online store. Handles inventory management, " +
                 "order processing, and payment gateway integration (Stripe & PayPal). " +
@@ -82,7 +82,7 @@ public class DataSeeder implements CommandLineRunner {
             Microservice m3 = new Microservice(
                 "Legacy CRM",
                 "v0.9.beta",
-                "on_hold",
+                "ON_HOLD",
                 9090,
                 "Internal Customer Relationship Management tool. Currently in maintenance mode " +
                 "while migrating to the new cloud architecture. Contains historical client data.",
@@ -94,7 +94,7 @@ public class DataSeeder implements CommandLineRunner {
             Microservice m4 = new Microservice(
                 "Data Analytics Engine",
                 "v3.0.1",
-                "active",
+                "ACTIVE",
                 7000,
                 "Background service that processes user activity logs to generate actionable insights. " +
                 "Uses machine learning models to predict server load and user retention.",
