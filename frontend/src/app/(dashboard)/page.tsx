@@ -16,7 +16,7 @@ import { ProjectRow } from "@/components/projects/RowProject";
 import { TasksCard } from "@/components/TasksCard";
 import { getDashboardData } from "@/lib/dashboard.service";
 import { getProjectsServer } from "@/types/data";
-
+import { StatTile } from "@/components/StatTitle";
 export default async function DashboardPage() {
   const session = await auth();
   if (!session || !session.user) redirect("/login");
@@ -47,7 +47,6 @@ export default async function DashboardPage() {
 
   return (
     <PageContainer className="space-y-8 pb-10">
-      {/* 1. HEADER MODIFICAT: Data este acum în dreapta */}
       <header className="flex items-center justify-between pt-4 pb-2">
         <div>
           <h1 className="text-3xl font-black text-[#1a1f36] tracking-tight">
@@ -62,7 +61,6 @@ export default async function DashboardPage() {
           </p>
         </div>
 
-        {/* Widget-ul de dată mutat în dreapta */}
         <div className="hidden md:flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-sm border border-slate-100">
           <CalendarDays size={16} className="text-indigo-600" />
           <span className="text-xs font-bold uppercase tracking-wider text-slate-600">
@@ -71,7 +69,6 @@ export default async function DashboardPage() {
         </div>
       </header>
 
-      {/* STATS TILES */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatTile
           icon={<Briefcase size={20} />}
@@ -104,9 +101,7 @@ export default async function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-12 gap-6 items-start">
-        {/* LEFT COLUMN */}
         <div className="col-span-12 lg:col-span-8 space-y-6">
-          {/* 2. RECENT PROJECTS: Am scos înălțimile forțate. Acum e compact. */}
           <Card className="rounded-[24px] border-none shadow-sm bg-white overflow-hidden">
             <div className="flex justify-between items-center px-6 py-4 border-b border-slate-50">
               <div className="flex items-center gap-2">
@@ -136,7 +131,6 @@ export default async function DashboardPage() {
                   ))}
                 </div>
               ) : (
-                // EMPTY STATE COMPACT: Am redus padding-ul și înălțimea
                 <div className="py-6 flex flex-col items-center justify-center text-slate-300 bg-slate-50/30 rounded-xl m-1 border border-dashed border-slate-100">
                   <span className="text-xs font-medium mb-1">
                     No recent projects
@@ -155,9 +149,7 @@ export default async function DashboardPage() {
           <TasksCard tasks={data.todayTasks} projects={projects} />
         </div>
 
-        {/* RIGHT COLUMN */}
         <div className="col-span-12 lg:col-span-4 space-y-6">
-          {/* Focus Card */}
           <Card className="p-6 rounded-[24px] border-none shadow-lg shadow-indigo-100 bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] text-white relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none" />
 
@@ -184,8 +176,7 @@ export default async function DashboardPage() {
             </div>
           </Card>
 
-          {/* System Status Mini */}
-          <Card className="p-4 rounded-[20px] border border-slate-100 shadow-sm bg-white">
+          <Card className="p-4 rounded-4xl border border-slate-100 shadow-sm bg-white">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-xs font-bold text-slate-700 uppercase">
                 System Status
@@ -211,52 +202,5 @@ export default async function DashboardPage() {
         </div>
       </div>
     </PageContainer>
-  );
-}
-
-// Componenta pentru Tile-uri (Neschimbată, doar stilizată)
-function StatTile({
-  icon,
-  label,
-  value,
-  color,
-  trend,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string | number;
-  color: "indigo" | "purple" | "emerald" | "orange";
-  trend: string;
-}) {
-  const colors = {
-    indigo: "bg-indigo-50 text-indigo-600",
-    purple: "bg-purple-50 text-purple-600",
-    emerald: "bg-emerald-50 text-emerald-600",
-    orange: "bg-orange-50 text-orange-600",
-  };
-
-  return (
-    <div className="group bg-white rounded-[20px] p-4 border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1">
-      <div className="flex justify-between items-start mb-3">
-        <div
-          className={`w-10 h-10 rounded-xl flex items-center justify-center ${colors[color]}`}
-        >
-          {icon}
-        </div>
-        <span
-          className={`text-[10px] font-bold px-2 py-1 rounded-full ${colors[color]}`}
-        >
-          {trend}
-        </span>
-      </div>
-      <div>
-        <div className="text-xl font-black text-slate-800 tracking-tight">
-          {value}
-        </div>
-        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mt-0.5">
-          {label}
-        </div>
-      </div>
-    </div>
   );
 }

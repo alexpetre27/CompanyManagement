@@ -52,7 +52,7 @@ export function TasksCard({ tasks, projects }: TasksCardProps) {
               ))}
             </div>
           ) : (
-            <div className="h-[180px] flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50/50">
+            <div className="h-45 flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50/50">
               <div className="w-12 h-12 rounded-full bg-white shadow-sm flex items-center justify-center mb-3">
                 <Coffee size={18} className="text-indigo-400" />
               </div>
