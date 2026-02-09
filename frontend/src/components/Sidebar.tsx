@@ -11,18 +11,38 @@ import {
   Settings,
   Building2,
   ChevronRight,
+  Activity, // Importăm iconița nouă
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const menuItems = [
-  { icon: LayoutDashboard, label: "Overview", href: "/" },
-  { icon: Briefcase, label: "Proiecte", href: "/projects" },
-  { icon: Users, label: "Echipă", href: "/users" },
-  { icon: Settings, label: "Setări", href: "/settings" },
-];
+// Definim props pentru componentă
+interface SidebarProps {
+  role?: string;
+}
 
-export function Sidebar() {
+export function Sidebar({ role }: SidebarProps) {
   const pathname = usePathname();
+  const isAdmin = role === "ADMIN";
+
+  // Mutăm meniul în interior și îl construim dinamic
+  const menuItems = [
+    { icon: LayoutDashboard, label: "Overview", href: "/" },
+    { icon: Briefcase, label: "Proiecte", href: "/projects" },
+    { icon: Users, label: "Echipă", href: "/users" },
+
+    // Adăugăm Status doar dacă e ADMIN
+    ...(isAdmin
+      ? [
+          {
+            icon: Activity,
+            label: "System Status",
+            href: "/status",
+          },
+        ]
+      : []),
+
+    { icon: Settings, label: "Setări", href: "/settings" },
+  ];
 
   const handleLogout = () => {
     signOut({ callbackUrl: "/login" });
@@ -75,6 +95,16 @@ export function Sidebar() {
       </nav>
 
       <div className="mt-auto p-4">
+        {isAdmin && (
+          <div className="mb-4 px-4 py-2 bg-slate-50 rounded-xl border border-slate-100">
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+              Role
+            </p>
+            <p className="text-xs font-bold text-indigo-600 flex items-center gap-1">
+              Administrator
+            </p>
+          </div>
+        )}
         <button
           onClick={handleLogout}
           className="w-full flex items-center gap-3 px-4 py-3 text-rose-500 font-bold text-sm rounded-2xl hover:bg-rose-50 transition group"
