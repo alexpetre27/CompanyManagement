@@ -74,3 +74,8 @@ export interface TasksCardProps {
   tasks: Task[];
   projects: Project[];
 }
+export interface Log {
+  time: string;
+  type: "INFO" | "ERROR" | "SUCCESS";
+  msg: string;
+}

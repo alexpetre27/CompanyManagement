@@ -138,7 +138,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.username =
           (token.username as string) || session.user.name || "";
         session.user.role = (token.role as string) || "USER";
-
         session.user.avatar = (token.avatar as string) || null;
 
         if (!session.user.email && token.email) {

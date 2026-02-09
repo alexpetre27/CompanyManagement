@@ -27,3 +27,9 @@ export interface SettingsViewProps {
     themePreference?: string;
   };
 }
+export interface AdminStatProps {
+  label: string;
+  value: string | number;
+  icon: React.ReactNode;
+  accent: string;
+}

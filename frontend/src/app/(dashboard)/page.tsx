@@ -150,7 +150,7 @@ export default async function DashboardPage() {
         </div>
 
         <div className="col-span-12 lg:col-span-4 space-y-6">
-          <Card className="p-6 rounded-[24px] border-none shadow-lg shadow-indigo-100 bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] text-white relative overflow-hidden">
+          <Card className="p-6 rounded-[24px] border-none shadow-lg shadow-indigo-100 bg-linear-to-br from-[#6366f1] to-[#8b5cf6] text-white relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none" />
 
             <div className="relative z-10">
