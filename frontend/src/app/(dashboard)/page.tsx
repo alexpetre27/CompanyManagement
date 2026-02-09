@@ -14,6 +14,10 @@ import {
   Server,
   Activity,
   UserPlus,
+  Target,
+  ArrowRight,
+  Coffee,
+  Zap,
 } from "lucide-react";
 import { PageContainer } from "@/components/PageContainer";
 import { ProjectRow } from "@/components/projects/RowProject";
@@ -70,6 +74,10 @@ export default async function DashboardPage() {
   const completedTasksCount = data.todayTasks
     ? data.todayTasks.filter((t) => t.isCompleted).length
     : 0;
+
+  const nextPriorityTask = data.todayTasks
+    ? data.todayTasks.find((t) => !t.isCompleted)
+    : null;
 
   return (
     <PageContainer className="space-y-8 pb-10">
@@ -307,19 +315,20 @@ export default async function DashboardPage() {
 
           <SystemHealthCard />
 
-          <Card className="p-5 rounded-[24px] border border-slate-100 shadow-sm bg-white">
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">
-              Quick Actions
-            </h3>
-            <div className="grid grid-cols-2 gap-2">
-              <Link
-                href="/projects"
-                className="flex flex-col items-center justify-center p-3 rounded-xl bg-slate-50 hover:bg-indigo-50 hover:text-indigo-600 transition text-slate-600"
-              >
-                <FolderOpen size={18} className="mb-1" />
-                <span className="text-[10px] font-bold">New Project</span>
-              </Link>
-              {isAdmin && (
+          {isAdmin ? (
+            <Card className="p-5 rounded-[24px] border border-slate-100 shadow-sm bg-white">
+              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">
+                Quick Actions
+              </h3>
+              <div className="grid grid-cols-2 gap-2">
+                <Link
+                  href="/projects"
+                  className="flex flex-col items-center justify-center p-3 rounded-xl bg-slate-50 hover:bg-indigo-50 hover:text-indigo-600 transition text-slate-600"
+                >
+                  <FolderOpen size={18} className="mb-1" />
+                  <span className="text-[10px] font-bold">New Project</span>
+                </Link>
+
                 <Link
                   href="/register"
                   className="flex flex-col items-center justify-center p-3 rounded-xl bg-slate-50 hover:bg-emerald-50 hover:text-emerald-600 transition text-slate-600"
@@ -327,9 +336,52 @@ export default async function DashboardPage() {
                   <UserPlus size={18} className="mb-1" />
                   <span className="text-[10px] font-bold">Add User</span>
                 </Link>
+              </div>
+            </Card>
+          ) : (
+            <Card className="p-5 rounded-[24px] border border-slate-100 shadow-sm bg-white">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                  Next Priority
+                </h3>
+                <Target className="text-indigo-500" size={16} />
+              </div>
+
+              {nextPriorityTask ? (
+                <div className="p-3 bg-indigo-50/50 rounded-2xl border border-indigo-100/50">
+                  <div className="flex justify-between items-start mb-2">
+                    <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider">
+                      {nextPriorityTask.projectName}
+                    </span>
+                    <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></div>
+                  </div>
+                  <p className="font-bold text-slate-700 text-sm mb-3 line-clamp-2 leading-tight">
+                    {nextPriorityTask.title}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <Link
+                      href="/projects"
+                      className="flex-1 flex items-center justify-center gap-1 bg-white text-indigo-600 text-[10px] font-bold py-2 rounded-xl shadow-sm hover:shadow-md transition-all"
+                    >
+                      Focus Now <ArrowRight size={12} />
+                    </Link>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-6 text-center">
+                  <div className="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center mb-2">
+                    <Coffee size={18} className="text-emerald-500" />
+                  </div>
+                  <p className="text-xs font-bold text-slate-700">
+                    All caught up!
+                  </p>
+                  <p className="text-[10px] text-slate-400 mt-1">
+                    No urgent tasks pending.
+                  </p>
+                </div>
               )}
-            </div>
-          </Card>
+            </Card>
+          )}
         </div>
       </div>
     </PageContainer>
