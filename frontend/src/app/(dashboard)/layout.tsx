@@ -1,6 +1,6 @@
 export const runtime = "nodejs";
 
-import { Sidebar } from "@/components/Sidebar"; // Asigură-te că importul e corect
+import { Sidebar } from "@/components/Sidebar";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 
@@ -18,9 +18,6 @@ export default async function DashboardLayout({
   if (!session) {
     redirect("/login");
   }
-
-  // 1. EXTRAGEM ROLUL DIN SESIUNE
-  // Fallback pe "USER" dacă nu există rol.
   const userRole = (session?.user as UserWithRole)?.role || "USER";
 
   return (

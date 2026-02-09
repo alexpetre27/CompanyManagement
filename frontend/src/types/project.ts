@@ -40,3 +40,17 @@ export interface Project {
   repoUrl?: string;
   liveUrl?: string;
 }
+export interface ProjectsToolbarProps {
+  searchTerm: string;
+  setSearchTerm: (value: string) => void;
+  filterStatus: string;
+  setFilterStatus: (value: string) => void;
+  viewMode: "grid" | "list";
+  setViewMode: (mode: "grid" | "list") => void;
+}
+export interface ProjectSelectorProps {
+  projects: Project[];
+  selectedId: string;
+  onSelect: (id: string) => void;
+  themeRing: string;
+}

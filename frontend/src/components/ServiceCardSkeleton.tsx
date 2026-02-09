@@ -3,7 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export function ServiceCardSkeleton() {
   return (
-    <Card className="h-[180px]">
+    <Card className="h-45">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <Skeleton className="h-5 w-32" />
         <Skeleton className="h-6 w-16 rounded-full" />

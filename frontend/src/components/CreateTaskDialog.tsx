@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   Dialog,
   DialogContent,
@@ -13,57 +13,18 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Loader2,
-  CheckCircle2,
-  AlertCircle,
-  Flame,
-  LayoutGrid,
-  ChevronDown,
-  Search,
-  Check,
-  Zap,
-} from "lucide-react";
+import { Loader2, Zap } from "lucide-react";
 import { toast } from "sonner";
 import { createTask, CreateTaskDTO } from "@/lib/task.service";
 import { Project } from "@/types/project";
 import { cn } from "@/lib/utils";
-
-interface CreateTaskDialogProps {
-  isOpen: boolean;
-  onOpenChange: (open: boolean) => void;
-  projects: Project[];
-}
-
-const themeConfig = {
-  LOW: {
-    bg: "bg-emerald-50/30",
-    border: "border-emerald-100",
-    accent: "text-emerald-600",
-    ring: "focus:ring-emerald-100",
-    button: "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-200",
-    icon: CheckCircle2,
-    gradient: "from-emerald-50/50 to-white",
-  },
-  MEDIUM: {
-    bg: "bg-amber-50/30",
-    border: "border-amber-100",
-    accent: "text-amber-600",
-    ring: "focus:ring-amber-100",
-    button: "bg-amber-500 hover:bg-amber-600 shadow-amber-200",
-    icon: AlertCircle,
-    gradient: "from-amber-50/50 to-white",
-  },
-  HIGH: {
-    bg: "bg-rose-50/30",
-    border: "border-rose-100",
-    accent: "text-rose-600",
-    ring: "focus:ring-rose-100",
-    button: "bg-rose-600 hover:bg-rose-700 shadow-rose-200",
-    icon: Flame,
-    gradient: "from-rose-50/50 to-white",
-  },
-};
+import {
+  themeConfig,
+  DifficultyLevel,
+  CreateTaskDialogProps,
+} from "@/types/dashboard";
+import { ProjectSelector } from "@/components/ProjectSelector";
+import { DifficultySelector } from "@/components/DifficultySelector";
 
 export function CreateTaskDialog({
   isOpen,
@@ -84,7 +45,7 @@ export function CreateTaskDialog({
     }
   }, [isOpen]);
 
-  const currentTheme = themeConfig[formData.difficulty];
+  const currentTheme = themeConfig[formData.difficulty as DifficultyLevel];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -133,7 +94,6 @@ export function CreateTaskDialog({
           </DialogHeader>
 
           <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
-            {/* 1. Title Input - Mare și curat */}
             <div className="space-y-2">
               <Label className="text-[11px] font-bold uppercase tracking-wider text-slate-400 pl-1">
                 What needs to be done?
@@ -154,7 +114,6 @@ export function CreateTaskDialog({
               </div>
             </div>
 
-            {/* 2. Custom Project Selector */}
             <div className="space-y-2">
               <Label className="text-[11px] font-bold uppercase tracking-wider text-slate-400 pl-1">
                 Project Context
@@ -167,68 +126,16 @@ export function CreateTaskDialog({
               />
             </div>
 
-            {/* 3. Difficulty Cards */}
             <div className="space-y-2">
               <Label className="text-[11px] font-bold uppercase tracking-wider text-slate-400 pl-1">
                 Impact / Difficulty
               </Label>
-              <div className="grid grid-cols-3 gap-3">
-                {(
-                  Object.keys(themeConfig) as Array<keyof typeof themeConfig>
-                ).map((level) => {
-                  const isSelected = formData.difficulty === level;
-                  const theme = themeConfig[level];
-
-                  return (
-                    <motion.div
-                      key={level}
-                      onClick={() =>
-                        setFormData({ ...formData, difficulty: level })
-                      }
-                      whileHover={{ scale: 1.02, y: -2 }}
-                      whileTap={{ scale: 0.98 }}
-                      className={cn(
-                        "cursor-pointer relative flex flex-col items-center justify-center p-3 h-24 rounded-2xl border-2 transition-all duration-300",
-                        isSelected
-                          ? cn("bg-white shadow-md", theme.border)
-                          : "bg-white/50 border-transparent hover:bg-white hover:border-slate-100",
-                      )}
-                    >
-                      <div
-                        className={cn(
-                          "mb-2 p-1.5 rounded-full transition-colors",
-                          isSelected ? theme.bg : "bg-slate-100",
-                        )}
-                      >
-                        <theme.icon
-                          size={18}
-                          className={
-                            isSelected ? theme.accent : "text-slate-400"
-                          }
-                        />
-                      </div>
-                      <span
-                        className={cn(
-                          "text-[10px] font-bold uppercase tracking-wider transition-colors",
-                          isSelected ? theme.accent : "text-slate-400",
-                        )}
-                      >
-                        {level}
-                      </span>
-
-                      {isSelected && (
-                        <motion.div
-                          layoutId="active-dot"
-                          className={cn(
-                            "absolute top-2 right-2 w-2 h-2 rounded-full",
-                            theme.button.split(" ")[0],
-                          )}
-                        />
-                      )}
-                    </motion.div>
-                  );
-                })}
-              </div>
+              <DifficultySelector
+                value={formData.difficulty as DifficultyLevel}
+                onChange={(level) =>
+                  setFormData({ ...formData, difficulty: level })
+                }
+              />
             </div>
 
             <DialogFooter className="pt-4 gap-3">
@@ -260,131 +167,5 @@ export function CreateTaskDialog({
         </motion.div>
       </DialogContent>
     </Dialog>
-  );
-}
-
-// --- Custom Project Dropdown Component ---
-function ProjectSelector({
-  projects,
-  selectedId,
-  onSelect,
-  themeRing,
-}: {
-  projects: Project[];
-  selectedId: string;
-  onSelect: (id: string) => void;
-  themeRing: string;
-}) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [search, setSearch] = useState("");
-
-  const selectedProject = projects.find((p) => p.id.toString() === selectedId);
-
-  const filteredProjects = useMemo(() => {
-    return projects.filter((p) =>
-      p.name.toLowerCase().includes(search.toLowerCase()),
-    );
-  }, [projects, search]);
-
-  return (
-    <div className="relative">
-      <button
-        type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        className={cn(
-          "w-full h-12 px-4 rounded-xl bg-white/80 border border-slate-200/60 shadow-sm flex items-center justify-between transition-all",
-          "focus:outline-none focus:ring-4 hover:bg-white",
-          isOpen ? themeRing : "",
-          !selectedProject ? "text-slate-400" : "text-slate-700 font-bold",
-        )}
-      >
-        <span className="flex items-center gap-2 truncate">
-          <LayoutGrid
-            size={18}
-            className={selectedProject ? "text-indigo-500" : "text-slate-300"}
-          />
-          {selectedProject ? selectedProject.name : "Select a project..."}
-        </span>
-        <ChevronDown
-          size={16}
-          className={cn(
-            "text-slate-400 transition-transform",
-            isOpen && "rotate-180",
-          )}
-        />
-      </button>
-
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -10, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -10, scale: 0.95 }}
-            className="absolute z-50 top-full mt-2 w-full bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden"
-          >
-            <div className="p-2 border-b border-slate-50 bg-slate-50/50">
-              <div className="relative">
-                <Search
-                  size={14}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-                />
-                <input
-                  autoFocus
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search projects..."
-                  className="w-full h-9 pl-9 pr-3 rounded-lg bg-white border border-slate-200 text-xs font-medium focus:outline-none focus:border-indigo-400 placeholder:text-slate-400"
-                />
-              </div>
-            </div>
-
-            <div className="max-h-50 overflow-y-auto p-1 scrollbar-hide">
-              {filteredProjects.length > 0 ? (
-                filteredProjects.map((project) => (
-                  <button
-                    key={project.id}
-                    type="button"
-                    onClick={() => {
-                      onSelect(project.id.toString());
-                      setIsOpen(false);
-                      setSearch("");
-                    }}
-                    className={cn(
-                      "w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors",
-                      project.id.toString() === selectedId
-                        ? "bg-indigo-50 text-indigo-700 font-bold"
-                        : "text-slate-600 hover:bg-slate-50",
-                    )}
-                  >
-                    <span className="flex items-center gap-2">
-                      <div
-                        className={cn(
-                          "w-1.5 h-1.5 rounded-full",
-                          project.status === "ACTIVE"
-                            ? "bg-emerald-500"
-                            : "bg-slate-300",
-                        )}
-                      />
-                      {project.name}
-                    </span>
-                    {project.id.toString() === selectedId && (
-                      <Check size={14} />
-                    )}
-                  </button>
-                ))
-              ) : (
-                <div className="p-4 text-center text-xs text-slate-400">
-                  No projects found.
-                </div>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {isOpen && (
-        <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
-      )}
-    </div>
   );
 }

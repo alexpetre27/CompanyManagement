@@ -9,21 +9,11 @@ import {
   CheckCircle2,
   AlertTriangle,
   XCircle,
-  Cpu,
-  Globe,
   RefreshCw,
-  ShieldCheck,
 } from "lucide-react";
 import { PageContainer } from "@/components/PageContainer";
-
-interface Service {
-  id: string;
-  name: string;
-  type: string;
-  status: "operational" | "degraded" | "offline";
-  latency: string;
-}
-
+import { AutoRefresh } from "@/components/AutoRefresh";
+import Service from "@/types/service";
 async function getSystemHealth(): Promise<Service[]> {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
   try {
@@ -49,7 +39,7 @@ export default async function StatusPage() {
 
   return (
     <PageContainer className="space-y-8 pb-10">
-      {/* Header */}
+      <AutoRefresh intervalMs={5000} />{" "}
       <div className="flex justify-between items-end pt-4">
         <div>
           <h1 className="text-3xl font-black text-[#1a1f36] flex items-center gap-3">
@@ -79,10 +69,7 @@ export default async function StatusPage() {
           </Button>
         </form>
       </div>
-
-      {/* Quick Infrastructure Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Backend Status */}
         <Card className="p-6 rounded-[24px] border-none shadow-sm bg-white flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div
@@ -106,8 +93,6 @@ export default async function StatusPage() {
             </p>
           </div>
         </Card>
-
-        {/* Database Status */}
         <Card className="p-6 rounded-[24px] border-none shadow-sm bg-white flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div
@@ -132,8 +117,6 @@ export default async function StatusPage() {
           </div>
         </Card>
       </div>
-
-      {/* Detailed List */}
       <Card className="border-none shadow-sm rounded-[24px] bg-white overflow-hidden">
         <div className="px-6 py-4 border-b border-slate-50 flex items-center gap-2 bg-slate-50/30">
           <Activity size={16} className="text-indigo-500" />

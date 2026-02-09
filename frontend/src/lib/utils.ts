@@ -23,7 +23,7 @@ export function getErrorMessage(
   if (typeof error === "string") {
     return error;
   }
-  return "Eroare neașteptată";
+  return "An unknown error occurred";
 }
 
 export function formatDate(date: string): string {

@@ -5,11 +5,7 @@ import { Microservice } from "@/types/microservice";
 import { ServiceCard } from "./ServiceCard";
 import { ServiceCardSkeleton } from "./ServiceCardSkeleton";
 import { getMicroservices } from "@/lib/api";
-
-interface ServiceListProps {
-  userRole: string;
-}
-
+import { ServiceListProps } from "@/types/service";
 export default function ServiceList({ userRole }: ServiceListProps) {
   const { data, error, isLoading } = useSWR<Microservice[]>(
     "microservices",

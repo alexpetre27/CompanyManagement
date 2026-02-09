@@ -1,6 +1,5 @@
 "use client";
 import { Button } from "@/components/ui/button";
-import ResolvingViewport from "next/types.js";
 export default function Error({ reset }: { reset: () => void }) {
   return (
     <div className="flex flex-col items-center justify-center h-[50vh] gap-4">

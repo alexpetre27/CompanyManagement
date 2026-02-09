@@ -3,16 +3,7 @@
 import { motion } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { Search, X, LayoutGrid, List } from "lucide-react";
-
-interface ProjectsToolbarProps {
-  searchTerm: string;
-  setSearchTerm: (value: string) => void;
-  filterStatus: string;
-  setFilterStatus: (value: string) => void;
-  viewMode: "grid" | "list";
-  setViewMode: (mode: "grid" | "list") => void;
-}
-
+import { ProjectsToolbarProps } from "@/types/project";
 export function ProjectsToolbar({
   searchTerm,
   setSearchTerm,

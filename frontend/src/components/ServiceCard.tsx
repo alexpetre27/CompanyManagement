@@ -5,14 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Server, Activity, Hash, RefreshCw } from "lucide-react";
-import { Microservice } from "@/types/microservice";
 import { useSWRConfig } from "swr";
-
-interface ServiceCardProps {
-  service: Microservice;
-  userRole: string | null;
-}
-
+import { ServiceCardProps } from "@/types/service";
 export function ServiceCard({ service, userRole }: ServiceCardProps) {
   const [isRestarting, setIsRestarting] = useState(false);
   const { mutate } = useSWRConfig();

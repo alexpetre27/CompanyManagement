@@ -6,14 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, Coffee } from "lucide-react";
 import { TaskItemMini } from "@/components/MiniTaskItem";
 import { CreateTaskDialog } from "@/components/CreateTaskDialog";
-import { Task } from "@/types/dashboard";
-import { Project } from "@/types/project";
-
-interface TasksCardProps {
-  tasks: Task[];
-  projects: Project[];
-}
-
+import { TasksCardProps } from "@/types/dashboard";
 export function TasksCard({ tasks, projects }: TasksCardProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
@@ -60,7 +53,7 @@ export function TasksCard({ tasks, projects }: TasksCardProps) {
               <p className="text-xs font-bold text-slate-700">
                 You’re all clear ☕
               </p>
-              <p className="text-[11px] text-slate-400 mb-4 max-w-[220px] text-center">
+              <p className="text-[11px] text-slate-400 mb-4 max-w-55 text-center">
                 No tasks scheduled for today. Enjoy the calm or add a new one.
               </p>
 

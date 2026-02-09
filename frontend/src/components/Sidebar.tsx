@@ -11,11 +11,10 @@ import {
   Settings,
   Building2,
   ChevronRight,
-  Activity, // Importăm iconița nouă
+  Activity,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// Definim props pentru componentă
 interface SidebarProps {
   role?: string;
 }
@@ -24,13 +23,11 @@ export function Sidebar({ role }: SidebarProps) {
   const pathname = usePathname();
   const isAdmin = role === "ADMIN";
 
-  // Mutăm meniul în interior și îl construim dinamic
   const menuItems = [
     { icon: LayoutDashboard, label: "Overview", href: "/" },
     { icon: Briefcase, label: "Proiecte", href: "/projects" },
     { icon: Users, label: "Echipă", href: "/users" },
 
-    // Adăugăm Status doar dacă e ADMIN
     ...(isAdmin
       ? [
           {
