@@ -2,7 +2,7 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { PageContainer } from "@/components/PageContainer";
 import { ProjectsView } from "@/components/projects/ProjectsView";
-import { getProjectsServer } from "@/lib/data";
+import { getProjectsServer } from "@/types/data";
 
 export default async function ProjectsPage() {
   const session = await auth();

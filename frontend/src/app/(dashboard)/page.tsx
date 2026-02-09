@@ -1,4 +1,5 @@
 import { auth } from "@/auth";
+import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,35 +14,32 @@ import {
 import { PageContainer, CardHover } from "@/components/PageContainer";
 import { StatCard } from "@/components/StatCard";
 import { ProjectRow } from "@/components/projects/RowProject";
-import { TaskItemMini } from "@/components/MiniTaskItem";
+import { TasksCard } from "@/components/TasksCard";
 import { getDashboardData } from "@/lib/dashboard.service";
-
+import { getProjectsServer } from "@/types/data";
 export default async function DashboardPage() {
   const session = await auth();
 
   if (!session || !session.user) {
-    return (
-      <div className="flex h-full items-center justify-center">
-        <p className="text-red-500 font-bold">Access Denied</p>
-      </div>
-    );
+    redirect("/login");
   }
 
-  let data = await getDashboardData();
+  const [dashboardData, projects] = await Promise.all([
+    getDashboardData(),
+    getProjectsServer(),
+  ]);
 
-  if (!data) {
-    data = {
-      user: { name: session.user.name || "User", email: "", image: null },
-      stats: {
-        activeProjects: 0,
-        teamMembers: 0,
-        hoursWorked: 0,
-        productivity: 0,
-      },
-      recentProjects: [],
-      todayTasks: [],
-    };
-  }
+  const data = dashboardData || {
+    user: { name: session.user.name || "User", email: "", image: null },
+    stats: {
+      activeProjects: 0,
+      teamMembers: 0,
+      hoursWorked: 0,
+      productivity: 0,
+    },
+    recentProjects: [],
+    todayTasks: [],
+  };
 
   return (
     <PageContainer className="space-y-4">
@@ -129,22 +127,7 @@ export default async function DashboardPage() {
             </div>
           </Card>
 
-          <Card className="p-4 border-none shadow-sm rounded-[24px] bg-white transition-shadow duration-300 hover:shadow-md">
-            <h2 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-3 px-1">
-              TODAY'S TASKS
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {data.todayTasks.length > 0 ? (
-                data.todayTasks.map((task) => (
-                  <TaskItemMini key={task.id} {...task} />
-                ))
-              ) : (
-                <p className="text-xs text-slate-400 p-2 text-center col-span-2">
-                  No tasks for today.
-                </p>
-              )}
-            </div>
-          </Card>
+          <TasksCard tasks={data.todayTasks} projects={projects} />
         </div>
 
         <div className="col-span-12 lg:col-span-4 space-y-4">

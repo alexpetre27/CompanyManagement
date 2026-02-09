@@ -1,4 +1,4 @@
-import { getUsersServer } from "@/lib/data";
+import { getUsersServer } from "@/types/data";
 import { UsersTable } from "@/components/UsersTable";
 import { Button } from "@/components/ui/button";
 import { UserPlus, Users } from "lucide-react";
