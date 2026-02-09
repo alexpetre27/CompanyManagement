@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Project } from "@/types/project";
 import { ProjectCard } from "@/components/projects/ProjectCard";
 import { ProjectListItem } from "@/components/projects/ProjectListItem";
@@ -23,15 +23,23 @@ export function ProjectsView({
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 
-  const filteredProjects = initialProjects.filter((project) => {
-    const matchesSearch =
-      project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (project.description &&
-        project.description.toLowerCase().includes(searchTerm.toLowerCase()));
-    const matchesFilter =
-      filterStatus === "ALL" || project.status === filterStatus;
-    return matchesSearch && matchesFilter;
-  });
+  const filteredProjects = useMemo(() => {
+    return initialProjects.filter((project) => {
+      const term = searchTerm.toLowerCase();
+      const matchesSearch =
+        project.name?.toLowerCase().includes(term) ||
+        (project.description &&
+          project.description.toLowerCase().includes(term));
+
+      const projectStatusNormalized = project.status?.toUpperCase() || "";
+      const filterNormalized = filterStatus.toUpperCase();
+
+      const matchesFilter =
+        filterStatus === "ALL" || projectStatusNormalized === filterNormalized;
+
+      return matchesSearch && matchesFilter;
+    });
+  }, [initialProjects, searchTerm, filterStatus]);
 
   return (
     <div className="space-y-8">
@@ -113,11 +121,12 @@ export function ProjectsView({
         </div>
       )}
 
-      {/* Modals */}
-      <ProjectDetailsDialog
-        project={selectedProject}
-        onClose={() => setSelectedProject(null)}
-      />
+      {selectedProject && (
+        <ProjectDetailsDialog
+          project={selectedProject}
+          onClose={() => setSelectedProject(null)}
+        />
+      )}
 
       <CreateProjectDialog
         isOpen={isCreateOpen}

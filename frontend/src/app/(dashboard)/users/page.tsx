@@ -1,4 +1,4 @@
-import { getUsers } from "@/lib/user.service";
+import { getUsersServer } from "@/lib/data";
 import { UsersTable } from "@/components/UsersTable";
 import { Button } from "@/components/ui/button";
 import { UserPlus, Users } from "lucide-react";
@@ -13,7 +13,7 @@ export default async function UsersPage() {
     redirect("/login");
   }
 
-  const users = await getUsers();
+  const users = await getUsersServer();
 
   const userRole = (session?.user as { role?: string })?.role || "USER";
 

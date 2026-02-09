@@ -1,8 +1,6 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
-import { SettingsView } from "@/components/Settings"; // Asigura-te ca ai fisierul src/components/Settings.tsx
-
-// Helper pentru a lua datele proaspete de la backend
+import { SettingsView } from "@/components/Settings";
 async function getCurrentUser(token: string) {
   const apiUrl = process.env.INTERNAL_API_URL || "http://backend:8080/api";
   try {
@@ -12,7 +10,7 @@ async function getCurrentUser(token: string) {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
-      cache: "no-store", // Nu cache-uim datele userului
+      cache: "no-store",
     });
 
     if (res.ok) {
@@ -31,10 +29,8 @@ export default async function SettingsPage() {
     redirect("/login");
   }
 
-  // 1. Incercam sa luam datele actualizate din backend (inclusiv avatarul nou)
   const apiUser = await getCurrentUser(session.accessToken);
 
-  // 2. Construim obiectul user combinand datele din sesiune cu cele din API
   const userData = {
     name: apiUser?.username || session.user.name || "User",
     email: apiUser?.email || session.user.email || "",
@@ -53,7 +49,6 @@ export default async function SettingsPage() {
         </p>
       </div>
 
-      {/* Randam componenta de client care contine formularul si logica de upload */}
       <SettingsView user={userData} />
     </div>
   );

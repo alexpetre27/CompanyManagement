@@ -35,30 +35,16 @@ async function handleResponse(res: Response) {
   return res.json();
 }
 
-export async function getUsers() {
-  const headers = await getAuthHeaders();
-
-  const res = await fetch(`${API_URL}/users`, {
-    method: "GET",
-    headers: headers,
-    cache: "no-store",
-  });
-
-  return handleResponse(res);
-}
-
 export async function updateUserProfile(data: {
   username: string;
   email: string;
 }) {
   const headers = await getAuthHeaders();
-
   const res = await fetch(`${API_URL}/users/me`, {
     method: "PATCH",
     headers: headers,
     body: JSON.stringify(data),
   });
-
   return handleResponse(res);
 }
 
@@ -67,13 +53,11 @@ export async function updateUserPreferences(data: {
   themePreference?: string;
 }) {
   const headers = await getAuthHeaders();
-
   const res = await fetch(`${API_URL}/users/me/preferences`, {
     method: "PATCH",
     headers: headers,
     body: JSON.stringify(data),
   });
-
   return handleResponse(res);
 }
 
@@ -82,19 +66,16 @@ export async function changeUserPassword(data: {
   newPassword: string;
 }) {
   const headers = await getAuthHeaders();
-
   const res = await fetch(`${API_URL}/users/me/password`, {
     method: "PATCH",
     headers: headers,
     body: JSON.stringify(data),
   });
-
   return handleResponse(res);
 }
 
 export async function uploadUserAvatar(file: File) {
   const headers = await getAuthHeaders(true);
-
   const formData = new FormData();
   formData.append("file", file);
 
@@ -103,6 +84,5 @@ export async function uploadUserAvatar(file: File) {
     headers: headers,
     body: formData,
   });
-
   return handleResponse(res);
 }
