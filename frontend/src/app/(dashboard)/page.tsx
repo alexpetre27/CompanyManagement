@@ -2,27 +2,24 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import {
   Briefcase,
   Users,
   Clock,
   TrendingUp,
-  Zap,
-  ChevronRight,
+  FolderOpen,
+  CalendarDays,
+  ArrowUpRight,
 } from "lucide-react";
-import { PageContainer, CardHover } from "@/components/PageContainer";
-import { StatCard } from "@/components/StatCard";
+import { PageContainer } from "@/components/PageContainer";
 import { ProjectRow } from "@/components/projects/RowProject";
 import { TasksCard } from "@/components/TasksCard";
 import { getDashboardData } from "@/lib/dashboard.service";
 import { getProjectsServer } from "@/types/data";
+
 export default async function DashboardPage() {
   const session = await auth();
-
-  if (!session || !session.user) {
-    redirect("/login");
-  }
+  if (!session || !session.user) redirect("/login");
 
   const [dashboardData, projects] = await Promise.all([
     getDashboardData(),
@@ -30,7 +27,7 @@ export default async function DashboardPage() {
   ]);
 
   const data = dashboardData || {
-    user: { name: session.user.name || "User", email: "", image: null },
+    user: { name: session.user.name || "User" },
     stats: {
       activeProjects: 0,
       teamMembers: 0,
@@ -41,88 +38,116 @@ export default async function DashboardPage() {
     todayTasks: [],
   };
 
+  const firstName = data.user.name.split(" ")[0];
+  const today = new Date().toLocaleDateString("en-US", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  });
+
   return (
-    <PageContainer className="space-y-4">
-      <header className="flex justify-between items-center pt-2">
+    <PageContainer className="space-y-8 pb-10">
+      {/* 1. HEADER MODIFICAT: Data este acum în dreapta */}
+      <header className="flex items-center justify-between pt-4 pb-2">
         <div>
-          <h1 className="text-xl font-extrabold text-[#1a1f36]">
-            Welcome back,{" "}
-            {data.user.name ? data.user.name.split(" ")[0] : "User"}! 👋
+          <h1 className="text-3xl font-black text-[#1a1f36] tracking-tight">
+            Hello,{" "}
+            <span className="text-transparent bg-clip-text bg-linear-to-r from-indigo-600 to-violet-600">
+              {firstName}
+            </span>
+            !
           </h1>
-          <p className="text-[12px] text-slate-400 font-medium">
-            Here is an overview of your projects.
+          <p className="text-sm text-slate-500 font-medium mt-1">
+            Let's make today productive.
           </p>
         </div>
-        <Button
-          size="sm"
-          className="bg-[#6366f1] hover:bg-indigo-600 text-white rounded-xl px-4 py-2 gap-2 shadow-lg shadow-indigo-100 transition-all duration-200 hover:scale-105 active:scale-95 font-bold text-xs h-9"
-        >
-          <Zap size={14} fill="currentColor" /> Boost Active
-        </Button>
+
+        {/* Widget-ul de dată mutat în dreapta */}
+        <div className="hidden md:flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-sm border border-slate-100">
+          <CalendarDays size={16} className="text-indigo-600" />
+          <span className="text-xs font-bold uppercase tracking-wider text-slate-600">
+            {today}
+          </span>
+        </div>
       </header>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <CardHover>
-          <StatCard
-            icon={<Briefcase size={16} />}
-            label="ACTIVE"
-            value={data.stats.activeProjects}
-            trend="2.4%"
-            color="blue"
-          />
-        </CardHover>
-        <CardHover>
-          <StatCard
-            icon={<Users size={16} />}
-            label="TEAM"
-            value={data.stats.teamMembers}
-            trend="5.1%"
-            color="purple"
-          />
-        </CardHover>
-        <CardHover>
-          <StatCard
-            icon={<Clock size={16} />}
-            label="HOURS"
-            value={`${data.stats.hoursWorked}h`}
-            trend="12%"
-            color="green"
-          />
-        </CardHover>
-        <CardHover>
-          <StatCard
-            icon={<TrendingUp size={16} />}
-            label="PROD."
-            value={`+${data.stats.productivity}%`}
-            trend="8.2%"
-            color="orange"
-          />
-        </CardHover>
+      {/* STATS TILES */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatTile
+          icon={<Briefcase size={20} />}
+          label="Active Projects"
+          value={data.stats.activeProjects}
+          color="indigo"
+          trend="+2.5%"
+        />
+        <StatTile
+          icon={<Users size={20} />}
+          label="Team Members"
+          value={data.stats.teamMembers}
+          color="purple"
+          trend="+1 new"
+        />
+        <StatTile
+          icon={<Clock size={20} />}
+          label="Hours Tracked"
+          value={`${data.stats.hoursWorked}h`}
+          color="emerald"
+          trend="12% more"
+        />
+        <StatTile
+          icon={<TrendingUp size={20} />}
+          label="Productivity"
+          value={`${data.stats.productivity}%`}
+          color="orange"
+          trend="+5.4%"
+        />
       </div>
 
-      <div className="grid grid-cols-12 gap-4">
-        <div className="col-span-12 lg:col-span-8 space-y-4">
-          <Card className="p-4 border-none shadow-sm rounded-[24px] bg-white transition-shadow duration-300 hover:shadow-md">
-            <div className="flex justify-between items-center mb-3 px-1">
-              <h2 className="text-sm font-bold text-[#1a1f36]">
-                Recent Projects
-              </h2>
+      <div className="grid grid-cols-12 gap-6 items-start">
+        {/* LEFT COLUMN */}
+        <div className="col-span-12 lg:col-span-8 space-y-6">
+          {/* 2. RECENT PROJECTS: Am scos înălțimile forțate. Acum e compact. */}
+          <Card className="rounded-[24px] border-none shadow-sm bg-white overflow-hidden">
+            <div className="flex justify-between items-center px-6 py-4 border-b border-slate-50">
+              <div className="flex items-center gap-2">
+                <FolderOpen size={16} className="text-indigo-600" />
+                <h2 className="text-sm font-bold text-[#1a1f36]">
+                  Recent Projects
+                </h2>
+              </div>
               <Link
                 href="/projects"
-                className="text-[11px] font-bold text-[#6366f1] hover:underline transition-all active:scale-95 cursor-pointer"
+                className="text-[10px] font-bold text-slate-400 hover:text-indigo-600 transition-colors flex items-center gap-1"
               >
-                View All
+                View All <ArrowUpRight size={12} />
               </Link>
             </div>
-            <div className="space-y-2">
+
+            <div className="p-2">
               {data.recentProjects.length > 0 ? (
-                data.recentProjects.map((project) => (
-                  <ProjectRow key={project.id} {...project} />
-                ))
+                <div className="space-y-1">
+                  {data.recentProjects.map((p) => (
+                    <div
+                      key={p.id}
+                      className="hover:bg-slate-50 rounded-xl transition-colors px-2 py-1"
+                    >
+                      <ProjectRow {...p} />
+                    </div>
+                  ))}
+                </div>
               ) : (
-                <p className="text-xs text-slate-400 p-2 text-center">
-                  No active projects found.
-                </p>
+                // EMPTY STATE COMPACT: Am redus padding-ul și înălțimea
+                <div className="py-6 flex flex-col items-center justify-center text-slate-300 bg-slate-50/30 rounded-xl m-1 border border-dashed border-slate-100">
+                  <span className="text-xs font-medium mb-1">
+                    No recent projects
+                  </span>
+                  <Link
+                    href="/projects"
+                    className="text-[10px] font-bold text-indigo-500 hover:underline"
+                  >
+                    + Create Project
+                  </Link>
+                </div>
               )}
             </div>
           </Card>
@@ -130,39 +155,108 @@ export default async function DashboardPage() {
           <TasksCard tasks={data.todayTasks} projects={projects} />
         </div>
 
-        <div className="col-span-12 lg:col-span-4 space-y-4">
-          <Card className="p-5 bg-[#6366f1] text-white border-none shadow-xl rounded-[28px] relative overflow-hidden group transition-transform duration-300 hover:-translate-y-1">
+        {/* RIGHT COLUMN */}
+        <div className="col-span-12 lg:col-span-4 space-y-6">
+          {/* Focus Card */}
+          <Card className="p-6 rounded-[24px] border-none shadow-lg shadow-indigo-100 bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] text-white relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none" />
+
             <div className="relative z-10">
-              <h3 className="text-base font-bold mb-1">Upgrade to Pro</h3>
-              <p className="text-[11px] text-indigo-100 mb-4 font-medium leading-tight">
-                Get access to advanced reports and unlimited workspaces.
+              <div className="flex justify-between items-center mb-4">
+                <span className="px-2 py-0.5 rounded-md bg-white/20 backdrop-blur-md text-[10px] font-bold uppercase tracking-wider text-white border border-white/10">
+                  Status
+                </span>
+                <TrendingUp size={16} className="text-white/80" />
+              </div>
+
+              <h3 className="text-lg font-bold leading-tight mb-1">
+                On track for today
+              </h3>
+              <p className="text-xs text-indigo-100 font-medium opacity-90 mb-4">
+                You have completed{" "}
+                <span className="text-white font-bold">3 tasks</span>. Keep
+                going!
               </p>
-              <Button
-                size="sm"
-                className="w-full bg-white text-[#6366f1] hover:bg-white/90 font-bold rounded-xl h-9 shadow-md text-xs transition-transform duration-200 active:scale-95"
-              >
-                View Offer
-              </Button>
+
+              <div className="h-1.5 bg-black/20 rounded-full overflow-hidden backdrop-blur-sm">
+                <div className="h-full w-3/4 bg-white rounded-full shadow-[0_0_10px_rgba(255,255,255,0.5)]" />
+              </div>
             </div>
-            <div className="absolute -bottom-6 -right-6 w-28 h-28 bg-white/10 rounded-full blur-2xl transition-transform duration-500 group-hover:scale-150" />
           </Card>
 
-          <Card className="p-5 border-none shadow-sm rounded-[24px] bg-white min-h-45 transition-shadow duration-300 hover:shadow-md">
-            <div className="flex justify-between items-center mb-4">
-              <span className="text-[11px] font-bold text-slate-400 uppercase">
-                ACTIVITY
-              </span>
-              <ChevronRight size={14} className="text-slate-300" />
+          {/* System Status Mini */}
+          <Card className="p-4 rounded-[20px] border border-slate-100 shadow-sm bg-white">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-xs font-bold text-slate-700 uppercase">
+                System Status
+              </h3>
+              <div className="flex items-center gap-1.5">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-[10px] font-bold text-emerald-600">
+                  Stable
+                </span>
+              </div>
             </div>
-            <div className="flex items-center gap-2 px-1 py-1">
-              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-              <span className="text-xs font-semibold text-slate-600">
-                System is stable
-              </span>
+            <div className="space-y-2">
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-slate-500">Database</span>
+                <span className="font-mono text-slate-700">99.9%</span>
+              </div>
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-slate-500">API</span>
+                <span className="font-mono text-slate-700">14ms</span>
+              </div>
             </div>
           </Card>
         </div>
       </div>
     </PageContainer>
+  );
+}
+
+// Componenta pentru Tile-uri (Neschimbată, doar stilizată)
+function StatTile({
+  icon,
+  label,
+  value,
+  color,
+  trend,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string | number;
+  color: "indigo" | "purple" | "emerald" | "orange";
+  trend: string;
+}) {
+  const colors = {
+    indigo: "bg-indigo-50 text-indigo-600",
+    purple: "bg-purple-50 text-purple-600",
+    emerald: "bg-emerald-50 text-emerald-600",
+    orange: "bg-orange-50 text-orange-600",
+  };
+
+  return (
+    <div className="group bg-white rounded-[20px] p-4 border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1">
+      <div className="flex justify-between items-start mb-3">
+        <div
+          className={`w-10 h-10 rounded-xl flex items-center justify-center ${colors[color]}`}
+        >
+          {icon}
+        </div>
+        <span
+          className={`text-[10px] font-bold px-2 py-1 rounded-full ${colors[color]}`}
+        >
+          {trend}
+        </span>
+      </div>
+      <div>
+        <div className="text-xl font-black text-slate-800 tracking-tight">
+          {value}
+        </div>
+        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mt-0.5">
+          {label}
+        </div>
+      </div>
+    </div>
   );
 }
