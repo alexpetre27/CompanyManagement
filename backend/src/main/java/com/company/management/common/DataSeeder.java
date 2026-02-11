@@ -33,78 +33,75 @@ public class DataSeeder implements CommandLineRunner {
     }
 
     private void seedUsers() {
-        String email = "petrealexandru1152@gmail.com"; 
-        
-        if (userRepository.findByEmail(email).isEmpty()) {
-            User user = new User();
-            user.setUsername("alex_petre43"); 
-            user.setEmail(email);
-            user.setPassword(passwordEncoder.encode("parola123")); 
-            user.setRole("ADMIN");
-            
-            userRepository.save(user);
-            System.out.println(">>> DataSeeder: User 'alex_petre43' created successfully!");
+        if (userRepository.count() == 0) {
+            User admin = new User();
+            admin.setUsername("alex_petre43");
+            admin.setEmail("petrealexandru1152@gmail.com");
+            admin.setPassword(passwordEncoder.encode("parola123"));
+            admin.setRole("ADMIN");
+            userRepository.save(admin);
+
+            User dev1 = new User();
+            dev1.setUsername("ion_popescu");
+            dev1.setEmail("ion.popescu@company.com");
+            dev1.setPassword(passwordEncoder.encode("parola123"));
+            dev1.setRole("USER");
+            userRepository.save(dev1);
+
+            User dev2 = new User();
+            dev2.setUsername("elena_radua");
+            dev2.setEmail("elena.radua@company.com");
+            dev2.setPassword(passwordEncoder.encode("parola123"));
+            dev2.setRole("USER");
+            userRepository.save(dev2);
         }
     }
 
     private void seedProjects() {
         if (microserviceRepository.count() == 0) {
-            System.out.println(">>> DataSeeder: Seeding projects...");
+            Microservice m1 = new Microservice();
+            m1.setName("Management System");
+            m1.setVersion("v2.1.0");
+            m1.setStatus("ACTIVE");
+            m1.setPort(8080);
+            m1.setUptime("12 days");
+            m1.setDescription("SaaS dashboard for agile teams. Built with Spring Boot and Next.js.");
+            m1.setRepoUrl("https://github.com/alex/management-system");
+            m1.setLiveUrl("http://localhost:3000");
+            m1.setTechStack(Arrays.asList("Java", "Spring Boot", "Next.js", "PostgreSQL"));
 
-            Microservice m1 = new Microservice(
-                "Management System",
-                "v2.1.0",
-                "ACTIVE",
-                8080,
-                "A comprehensive SaaS dashboard for managing agile teams and microservices. " +
-                "Features include real-time analytics, user management, and project tracking. " +
-                "Built with a robust Java Spring Boot backend and a modern Next.js frontend.",
-                "https://github.com/alex/management-system",
-                "http://localhost:3000",
-                Arrays.asList("Java", "Spring Boot", "Next.js", "PostgreSQL", "Docker"),
-                 null
-            );
+            Microservice m2 = new Microservice();
+            m2.setName("E-commerce API");
+            m2.setVersion("v1.5.2");
+            m2.setStatus("ACTIVE");
+            m2.setPort(5000);
+            m2.setUptime("45 days");
+            m2.setDescription("Scalable REST API for online stores. High availability architecture.");
+            m2.setRepoUrl("https://github.com/alex/ecommerce-api");
+            m2.setLiveUrl("https://api.store.com");
+            m2.setTechStack(Arrays.asList("Python", "FastAPI", "Redis", "MongoDB"));
 
-            Microservice m2 = new Microservice(
-                "E-commerce API",
-                "v1.5.2",
-                "ACTIVE",
-                5000,
-                "Scalable REST API for a high-traffic online store. Handles inventory management, " +
-                "order processing, and payment gateway integration (Stripe & PayPal). " +
-                "Optimized for high availability and low latency.",
-                "https://github.com/alex/ecommerce-api",
-                "https://api.store.com",
-                Arrays.asList("Python", "FastAPI", "Redis", "MongoDB", "AWS"),
-                null
-            );
+            Microservice m3 = new Microservice();
+            m3.setName("Legacy CRM");
+            m3.setVersion("v0.9.beta");
+            m3.setStatus("ON_HOLD");
+            m3.setPort(9090);
+            m3.setUptime("0 days");
+            m3.setDescription("Internal tool in maintenance mode while migrating to cloud.");
+            m3.setLiveUrl("http://internal-crm.local");
+            m3.setTechStack(Arrays.asList("PHP", "Laravel", "MySQL", "jQuery"));
 
-            Microservice m3 = new Microservice(
-                "Legacy CRM",
-                "v0.9.beta",
-                "ON_HOLD",
-                9090,
-                "Internal Customer Relationship Management tool. Currently in maintenance mode " +
-                "while migrating to the new cloud architecture. Contains historical client data.",
-                null, 
-                "http://internal-crm.local",
-                Arrays.asList("PHP", "Laravel", "MySQL", "jQuery"), null
-            );
-
-            Microservice m4 = new Microservice(
-                "Data Analytics Engine",
-                "v3.0.1",
-                "ACTIVE",
-                7000,
-                "Background service that processes user activity logs to generate actionable insights. " +
-                "Uses machine learning models to predict server load and user retention.",
-                "https://github.com/alex/analytics-engine",
-                null,
-                Arrays.asList("Java", "Kafka", "Elasticsearch", "Spark"), null
-            );
+            Microservice m4 = new Microservice();
+            m4.setName("Analytics Engine");
+            m4.setVersion("v3.0.1");
+            m4.setStatus("ACTIVE");
+            m4.setPort(7000);
+            m4.setUptime("5 days");
+            m4.setDescription("Service processing activity logs for actionable insights via ML.");
+            m4.setRepoUrl("https://github.com/alex/analytics-engine");
+            m4.setTechStack(Arrays.asList("Java", "Kafka", "Elasticsearch", "Spark"));
 
             microserviceRepository.saveAll(List.of(m1, m2, m3, m4));
-            System.out.println(">>> DataSeeder: 4 Projects created!");
         }
     }
 }

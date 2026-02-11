@@ -5,7 +5,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 public class UserDTOs {
-
 public record UserResponseDTO(
         Long id,
         String username,
@@ -13,9 +12,9 @@ public record UserResponseDTO(
         String role,
         String avatar,
         Boolean notificationsEnabled,
-        String themePreference
+        String themePreference,
+        Long projectId
     ) {}
-   
     public record ChangePasswordDTO(
         String oldPassword,
         String newPassword
