@@ -65,7 +65,7 @@ export function RoleSelectorPortal({
             initial={{ opacity: 0, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 4 }}
-            className="absolute left-0 right-0 top-[calc(100%+6px)] bg-white rounded-xl shadow-2xl border border-slate-100 py-1 overflow-hidden z-[100]"
+            className="absolute left-0 right-0 top-[calc(100%+6px)] bg-white rounded-xl shadow-2xl border border-slate-100 py-1 overflow-hidden z-100"
           >
             {roles.map((role) => (
               <button

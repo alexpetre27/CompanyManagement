@@ -2,8 +2,8 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { PageContainer } from "@/components/PageContainer";
 import { getUsersServer, getProjectsServer } from "@/types/data";
-import { UsersTable } from "@/components/UsersTable";
-import { UnassignedUsersList } from "@/components/UnassignedUsersList";
+import { UsersTable } from "@/components/projects/UsersTable";
+import { UnassignedUsersList } from "@/components/projects/UnassignedUsersList";
 import { Users as UsersIcon } from "lucide-react";
 
 export default async function TeamPage() {

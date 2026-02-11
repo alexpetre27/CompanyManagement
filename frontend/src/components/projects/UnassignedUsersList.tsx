@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2, UserPlus, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
-import { ProjectSelectorPortal } from "@/components/ProjectSelectorPortal";
+import { ProjectSelectorPortal } from "@/components/projects/ProjectSelectorPortal";
 import { User } from "@/types/user";
 import { Project } from "@/types/project";
 

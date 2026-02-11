@@ -3,8 +3,8 @@ import { redirect, notFound } from "next/navigation";
 import { ShieldCheck, Users, Activity, Server, Clock } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { getAdminDashboardData } from "@/types/data";
-import { ControlPanel } from "@/components/ControlPanel";
-import { AuditTerminal } from "@/components/AuditTerminal";
+import { ControlPanel } from "@/components/admin/ControlPanel";
+import { AuditTerminal } from "@/components/admin/AuditTerminal";
 import { User } from "@/types/user";
 
 export const dynamic = "force-dynamic";

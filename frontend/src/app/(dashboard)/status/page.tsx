@@ -11,7 +11,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { PageContainer } from "@/components/PageContainer";
-import { AutoRefresh } from "@/components/AutoRefresh";
+import { AutoRefresh } from "@/components/status/AutoRefresh";
 import Service from "@/types/service";
 
 async function getSystemHealth(): Promise<Service[]> {

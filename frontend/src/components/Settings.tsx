@@ -11,7 +11,7 @@ import {
   uploadUserAvatar,
   changeUserPassword,
   updateUserPreferences,
-} from "@/lib/user.service";
+} from "@/lib/services/user.service";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { SettingsViewProps } from "@/types/user";
 

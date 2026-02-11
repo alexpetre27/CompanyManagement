@@ -13,8 +13,8 @@ import {
   MoreHorizontal,
 } from "lucide-react";
 import { Project } from "@/types/project";
-import { TechStack } from "@/components/TechStack";
-import { TeamList } from "@/components/TeamList";
+import { TechStack } from "@/components/projects/TechStack";
+import { TeamList } from "@/components/projects/TeamList";
 
 async function getProjectData(
   id: string,

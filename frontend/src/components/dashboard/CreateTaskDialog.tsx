@@ -21,7 +21,7 @@ import {
   User as UserIcon,
 } from "lucide-react";
 import { toast } from "sonner";
-import { createTask, CreateTaskDTO } from "@/lib/task.service";
+import { createTask, CreateTaskDTO } from "@/lib/services/task.service";
 import { User } from "@/types/user";
 import { cn } from "@/lib/utils";
 import {
@@ -29,8 +29,8 @@ import {
   DifficultyLevel,
   CreateTaskDialogProps,
 } from "@/types/dashboard";
-import { ProjectSelector } from "@/components/ProjectSelector";
-import { DifficultySelector } from "@/components/DifficultySelector";
+import { ProjectSelector } from "@/components/projects/ProjectSelector";
+import { DifficultySelector } from "@/components/dashboard/DifficultySelector";
 
 interface ExtendedProps extends CreateTaskDialogProps {
   users: User[];

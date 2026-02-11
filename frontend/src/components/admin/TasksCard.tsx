@@ -4,8 +4,8 @@ import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Coffee } from "lucide-react";
-import { TaskItemMini } from "@/components/MiniTaskItem";
-import { CreateTaskDialog } from "@/components/CreateTaskDialog";
+import { TaskItemMini } from "@/components/dashboard/MiniTaskItem";
+import { CreateTaskDialog } from "@/components/dashboard/CreateTaskDialog";
 import { TasksCardProps } from "@/types/dashboard";
 import { User } from "@/types/user";
 

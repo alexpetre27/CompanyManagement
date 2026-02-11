@@ -20,11 +20,11 @@ import {
 } from "lucide-react";
 import { PageContainer } from "@/components/PageContainer";
 import { ProjectRow } from "@/components/projects/RowProject";
-import { TasksCard } from "@/components/TasksCard";
-import { StatTile } from "@/components/StatTitle";
-import { SystemHealthCard } from "@/components/SystemHealthCard";
-import { getDashboardData } from "@/lib/dashboard.service";
-import { getSystemStats } from "@/lib/admin.service";
+import { TasksCard } from "@/components/admin/TasksCard";
+import { StatTile } from "@/components/projects/StatTitle";
+import { SystemHealthCard } from "@/components/status/SystemHealthCard";
+import { getDashboardData } from "@/lib/services/dashboard.service";
+import { getSystemStats } from "@/lib/services/admin.service";
 import { SystemEvent } from "@/types/dashboard";
 import { getProjectsServer, getUsersServer } from "@/types/data";
 
