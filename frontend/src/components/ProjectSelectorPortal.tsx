@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { LayoutGrid, ChevronDown, Search, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -18,7 +18,7 @@ export function ProjectSelectorPortal({
   const containerRef = useRef<HTMLDivElement>(null);
   const [coords, setCoords] = useState({ top: 0, left: 0, width: 0 });
 
-  const toggleOpen = () => {
+  const updateCoords = useCallback(() => {
     if (containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
       setCoords({
@@ -27,8 +27,22 @@ export function ProjectSelectorPortal({
         width: rect.width,
       });
     }
+  }, []);
+
+  const toggleOpen = () => {
+    updateCoords();
     setIsOpen(!isOpen);
   };
+
+  useEffect(() => {
+    if (!isOpen) return;
+    window.addEventListener("resize", updateCoords);
+    window.addEventListener("scroll", updateCoords, true);
+    return () => {
+      window.removeEventListener("resize", updateCoords);
+      window.removeEventListener("scroll", updateCoords, true);
+    };
+  }, [isOpen, updateCoords]);
 
   const selectedProject = projects.find((p) => p.id.toString() === selectedId);
   const filteredProjects = useMemo(() => {
@@ -43,8 +57,8 @@ export function ProjectSelectorPortal({
         type="button"
         onClick={toggleOpen}
         className={cn(
-          "w-full h-12 px-4 rounded-xl bg-white/80 border border-slate-200/60 shadow-sm flex items-center justify-between transition-all",
-          "focus:outline-none focus:ring-4 hover:bg-white",
+          "w-full h-11 px-4 rounded-xl bg-white border border-slate-200 shadow-sm flex items-center justify-between transition-all",
+          "focus:outline-none focus:ring-4 hover:bg-slate-50",
           isOpen ? themeRing : "",
           !selectedProject ? "text-slate-400" : "text-slate-700 font-bold",
         )}
@@ -71,7 +85,7 @@ export function ProjectSelectorPortal({
           createPortal(
             <>
               <div
-                className="fixed inset-0 z-[9998]"
+                className="fixed inset-0 z-9998 bg-transparent"
                 onClick={() => setIsOpen(false)}
               />
               <motion.div

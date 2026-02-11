@@ -61,44 +61,64 @@ export async function getProjectsServer(): Promise<Project[]> {
 }
 
 export async function getAdminDashboardData() {
-  const [users, projects, health] = await Promise.all([
-    getUsersServer(),
-    getProjectsServer(),
-    checkSpringBootBackend(),
-  ]);
+  try {
+    const [rawUsers, rawProjects, health] = await Promise.all([
+      getUsersServer(),
+      getProjectsServer(),
+      checkSpringBootBackend(),
+    ]);
 
-  const backendService = health.find((s) => s.id === "spring-backend");
-  const backendStatus =
-    backendService?.status === "operational" ? "Online" : "Offline";
+    const users = rawUsers || [];
+    const projects = rawProjects || [];
+    const healthStatus = health || [];
 
-  const recentUsers = users.slice(0, 5);
+    const backendService = healthStatus.find((s) => s.id === "spring-backend");
+    const backendStatus =
+      backendService?.status === "operational" ? "Online" : "Offline";
 
-  const logs: Log[] = [
-    ...users.slice(0, 3).map((u) => ({
-      type: "INFO" as const,
-      msg: `User registered: ${u.email || u.name || "Unknown"}`,
-      time: "Recent",
-    })),
-    ...projects.slice(0, 3).map((p) => ({
-      type: "SUCCESS" as const,
-      msg: `Project active: ${p.name}`,
-      time: "Active",
-    })),
-    {
-      type:
-        backendStatus === "Online" ? ("SUCCESS" as const) : ("ERROR" as const),
-      msg: `System Health Check: ${backendStatus}`,
-      time: new Date().toLocaleTimeString("ro-RO"),
-    },
-  ];
+    const now = new Date();
+    const formattedTime = now.toLocaleTimeString("ro-RO", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
 
-  return {
-    stats: {
-      users: users.length,
-      projects: projects.length,
-      backendStatus,
-    },
-    recentUsers,
-    logs,
-  };
+    const logs: Log[] = [
+      ...users.slice(0, 3).map((u) => ({
+        type: "INFO" as const,
+        msg: `User registered: ${u.email || u.name || "Unknown"}`,
+        time: "Recent",
+      })),
+      ...projects.slice(0, 3).map((p) => ({
+        type: "SUCCESS" as const,
+        msg: `Project active: ${p.name}`,
+        time: "Active",
+      })),
+      {
+        type:
+          backendStatus === "Online"
+            ? ("SUCCESS" as const)
+            : ("ERROR" as const),
+        msg: `System Health Check: ${backendStatus}`,
+        time: formattedTime,
+      },
+    ];
+
+    return {
+      stats: {
+        users: users.length,
+        projects: projects.length,
+        backendStatus,
+      },
+      recentUsers: users.slice(0, 5),
+      logs,
+      serverTime: formattedTime,
+    };
+  } catch (error) {
+    return {
+      stats: { users: 0, projects: 0, backendStatus: "Offline" },
+      recentUsers: [],
+      logs: [],
+      serverTime: "--:--",
+    };
+  }
 }

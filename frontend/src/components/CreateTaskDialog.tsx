@@ -114,7 +114,7 @@ export function CreateTaskDialog({
           animate={{
             backgroundImage: `linear-gradient(to bottom right, var(--tw-gradient-stops))`,
           }}
-          className={`relative h-full w-full bg-white p-6 md:p-8 transition-colors duration-500 bg-gradient-to-br ${currentTheme.gradient} rounded-[28px]`}
+          className={`relative h-full w-full bg-white p-6 md:p-8 transition-colors duration-500 bg-linear-to-br ${currentTheme.gradient} rounded-[28px]`}
         >
           <DialogHeader className="mb-6 relative z-10">
             <DialogTitle className="text-2xl font-black text-[#1a1f36] flex items-center gap-3">
@@ -203,7 +203,7 @@ export function CreateTaskDialog({
                             <UserIcon size={14} />
                           )}
                         </div>
-                        <span className="truncate max-w-[100px] text-sm">
+                        <span className="truncate max-w-25 text-sm">
                           {selectedUser
                             ? selectedUser.name || selectedUser.email
                             : "Unassigned"}
@@ -269,7 +269,7 @@ export function CreateTaskDialog({
                                     : "hover:bg-slate-50 text-slate-700",
                                 )}
                               >
-                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center border border-white shadow-sm text-xs font-bold text-indigo-600">
+                                <div className="w-8 h-8 rounded-full bg-linear-to-br from-indigo-100 to-purple-100 flex items-center justify-center border border-white shadow-sm text-xs font-bold text-indigo-600">
                                   {getInitials(user.name || user.email)}
                                 </div>
                                 <span className="text-sm font-medium flex-1 truncate">

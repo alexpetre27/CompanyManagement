@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { getAdminDashboardData } from "@/types/data";
 import { ControlPanel } from "@/components/ControlPanel";
 import { AuditTerminal } from "@/components/AuditTerminal";
-import { User, AdminStatProps } from "@/types/user";
+import { User } from "@/types/user";
 
 export const dynamic = "force-dynamic";
 
@@ -16,13 +16,15 @@ export default async function AdminPage() {
   const role = (session.user as { role?: string }).role || "USER";
   if (role !== "ADMIN") return notFound();
 
-  const { stats, recentUsers, logs } = await getAdminDashboardData();
+  const { stats, recentUsers, logs, serverTime } =
+    await getAdminDashboardData();
+  const isOnline = stats.backendStatus === "Online";
 
   return (
     <div className="space-y-6 pb-10">
       <div className="relative rounded-[32px] overflow-hidden bg-white border border-slate-200 p-8 md:p-10 shadow-xl shadow-slate-200/50">
-        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-indigo-50 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/4 opacity-60" />
-        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-emerald-50 rounded-full blur-[80px] translate-y-1/2 -translate-x-1/4 opacity-60" />
+        <div className="absolute top-0 right-0 w-150 h-150 bg-indigo-50 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/4 opacity-60" />
+        <div className="absolute bottom-0 left-0 w-125 h-125 bg-emerald-50 rounded-full blur-[80px] translate-y-1/2 -translate-x-1/4 opacity-60" />
 
         <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div className="space-y-2">
@@ -40,68 +42,59 @@ export default async function AdminPage() {
 
           <div className="flex items-center gap-3 px-4 py-2 bg-white rounded-2xl border border-slate-100 shadow-lg shadow-slate-100/50">
             <div className="relative flex h-3 w-3">
-              {stats.backendStatus === "Online" ? (
-                <>
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
-                </>
-              ) : (
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-rose-500 shadow-[0_0_10px_#f43f5e]"></span>
+              {isOnline && (
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
               )}
+              <span
+                className={`relative inline-flex rounded-full h-3 w-3 ${isOnline ? "bg-emerald-500" : "bg-rose-500 shadow-[0_0_10px_#f43f5e]"}`}
+              ></span>
             </div>
             <span
-              className={`text-xs font-mono font-bold tracking-wide ${
-                stats.backendStatus === "Online"
-                  ? "text-emerald-600"
-                  : "text-rose-600"
-              }`}
+              className={`text-xs font-mono font-bold tracking-wide ${isOnline ? "text-emerald-600" : "text-rose-600"}`}
             >
-              {stats.backendStatus === "Online"
-                ? "SYSTEM ONLINE"
-                : "SYSTEM CRITICAL"}
+              {isOnline ? "SYSTEM ONLINE" : "SYSTEM CRITICAL"}
             </span>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <AdminStat
           icon={<Users size={18} />}
           label="Total Users"
           value={stats.users}
-          accent="text-blue-600 bg-blue-50"
+          variant="blue"
         />
         <AdminStat
           icon={<Activity size={18} />}
           label="Active Projects"
           value={stats.projects}
-          accent="text-purple-600 bg-purple-50"
+          variant="purple"
         />
         <AdminStat
           icon={<Server size={18} />}
           label="API Status"
           value={stats.backendStatus}
-          accent={
-            stats.backendStatus === "Online"
-              ? "text-emerald-600 bg-emerald-50"
-              : "text-red-600 bg-red-50"
-          }
+          variant={isOnline ? "emerald" : "rose"}
         />
         <AdminStat
           icon={<Clock size={18} />}
           label="Server Time"
-          value={new Date().toLocaleTimeString("ro-RO", {
-            hour: "2-digit",
-            minute: "2-digit",
-          })}
-          accent="text-orange-600 bg-orange-50"
+          value={
+            serverTime ||
+            new Date().toLocaleTimeString("ro-RO", {
+              hour: "2-digit",
+              minute: "2-digit",
+            })
+          }
+          variant="orange"
         />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div className="lg:col-span-6">
           <Card className="bg-white border-none shadow-sm rounded-[24px] overflow-hidden h-full flex flex-col ring-1 ring-slate-100">
-            <div className="px-6 py-5 border-b border-slate-50 flex justify-between items-center bg-white">
+            <div className="px-6 py-5 border-b border-slate-50 flex justify-between items-center">
               <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">
                 Recent Users
               </h3>
@@ -129,8 +122,8 @@ export default async function AdminPage() {
                           {u.id}
                         </td>
                         <td className="px-6 py-3.5 text-right">
-                          <span className="bg-indigo-50 text-indigo-600 px-2.5 py-1 rounded-lg text-[10px] font-bold border border-indigo-100">
-                            {u.role || "USER"}
+                          <span className="bg-slate-50 text-slate-600 px-2.5 py-1 rounded-lg text-[10px] font-bold border border-slate-100 uppercase">
+                            {u.role}
                           </span>
                         </td>
                       </tr>
@@ -141,7 +134,7 @@ export default async function AdminPage() {
                         colSpan={3}
                         className="p-8 text-center text-slate-400"
                       >
-                        No users found in database.
+                        No users found.
                       </td>
                     </tr>
                   )}
@@ -156,22 +149,32 @@ export default async function AdminPage() {
         </div>
 
         <div className="lg:col-span-3">
-          <AuditTerminal
-            logs={
-              logs as Array<{
-                type: "INFO" | "SUCCESS" | "ERROR";
-                msg: string;
-                time: string;
-              }>
-            }
-          />
+          <AuditTerminal logs={logs} />
         </div>
       </div>
     </div>
   );
 }
 
-function AdminStat({ label, value, icon, accent }: AdminStatProps) {
+function AdminStat({
+  label,
+  value,
+  icon,
+  variant,
+}: {
+  label: string;
+  value: string | number;
+  icon: React.ReactNode;
+  variant: string;
+}) {
+  const variants: Record<string, string> = {
+    blue: "text-blue-600 bg-blue-50",
+    purple: "text-purple-600 bg-purple-50",
+    emerald: "text-emerald-600 bg-emerald-50",
+    rose: "text-rose-600 bg-rose-50",
+    orange: "text-orange-600 bg-orange-50",
+  };
+
   return (
     <div className="bg-white p-5 rounded-[24px] shadow-sm border border-slate-100 flex justify-between items-center hover:shadow-md transition-all duration-200">
       <div>
@@ -182,7 +185,9 @@ function AdminStat({ label, value, icon, accent }: AdminStatProps) {
           {value}
         </p>
       </div>
-      <div className={`p-3 rounded-2xl ${accent}`}>{icon}</div>
+      <div className={`p-3 rounded-2xl ${variants[variant] || variants.blue}`}>
+        {icon}
+      </div>
     </div>
   );
 }

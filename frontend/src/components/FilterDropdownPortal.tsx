@@ -1,7 +1,7 @@
 "use client";
 
 import { FilterDropdownProps } from "@/types/user";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { ChevronDown } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { createPortal } from "react-dom";
@@ -16,19 +16,7 @@ export default function FilterDropdownPortal({
   const ref = useRef<HTMLDivElement>(null);
   const [coords, setCoords] = useState({ top: 0, left: 0, width: 0 });
 
-  useEffect(() => {
-    if (!open) return;
-
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node))
-        setOpen(false);
-    };
-
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [open]);
-
-  const toggleDropdown = () => {
+  const updateCoords = useCallback(() => {
     if (ref.current) {
       const rect = ref.current.getBoundingClientRect();
       setCoords({
@@ -37,8 +25,29 @@ export default function FilterDropdownPortal({
         width: rect.width,
       });
     }
+  }, []);
+
+  const toggleDropdown = () => {
+    updateCoords();
     setOpen(!open);
   };
+
+  useEffect(() => {
+    if (!open) return;
+
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node))
+        setOpen(false);
+    };
+
+    window.addEventListener("resize", updateCoords);
+    document.addEventListener("mousedown", handler);
+
+    return () => {
+      window.removeEventListener("resize", updateCoords);
+      document.removeEventListener("mousedown", handler);
+    };
+  }, [open, updateCoords]);
 
   const selected = options.find((o) => o.value === value);
 
@@ -46,7 +55,7 @@ export default function FilterDropdownPortal({
     <div ref={ref} className="relative">
       <button
         onClick={toggleDropdown}
-        className={`flex items-center justify-between gap-2 px-3 py-2 text-[11px] font-bold uppercase tracking-wider rounded-xl min-w-[140px] transition-all
+        className={`flex items-center justify-between gap-2 px-3 py-2 text-[11px] font-bold uppercase tracking-wider rounded-xl min-w-35 transition-all
           ${value !== "ALL" ? "bg-indigo-50 text-indigo-600 ring-1 ring-indigo-100" : "bg-white text-slate-500 ring-1 ring-slate-200 hover:bg-slate-50"}`}
       >
         <span className="flex items-center gap-2 truncate">
@@ -63,7 +72,11 @@ export default function FilterDropdownPortal({
         {open &&
           typeof document !== "undefined" &&
           createPortal(
-            <div className="fixed inset-0 z-[9999] pointer-events-none">
+            <>
+              <div
+                className="fixed inset-0 z-9998"
+                onClick={() => setOpen(false)}
+              />
               <motion.div
                 initial={{ opacity: 0, y: -4 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -73,7 +86,7 @@ export default function FilterDropdownPortal({
                   top: coords.top + 8,
                   left: coords.left,
                   width: coords.width,
-                  pointerEvents: "auto",
+                  zIndex: 9999,
                 }}
                 className="rounded-xl bg-white shadow-2xl ring-1 ring-black/5 py-1 overflow-hidden"
               >
@@ -92,7 +105,7 @@ export default function FilterDropdownPortal({
                   </button>
                 ))}
               </motion.div>
-            </div>,
+            </>,
             document.body,
           )}
       </AnimatePresence>

@@ -4,11 +4,7 @@ import { PageContainer } from "@/components/PageContainer";
 import { getUsersServer, getProjectsServer } from "@/types/data";
 import { UsersTable } from "@/components/UsersTable";
 import { UnassignedUsersList } from "@/components/UnassignedUsersList";
-import { Users } from "lucide-react";
-
-interface SessionUser {
-  role?: string;
-}
+import { Users as UsersIcon } from "lucide-react";
 
 export default async function TeamPage() {
   const session = await auth();
@@ -17,15 +13,13 @@ export default async function TeamPage() {
     redirect("/login");
   }
 
+  const userRole = (session.user as { role?: string }).role || "USER";
+  const isAdmin = userRole === "ADMIN" || userRole === "ROLE_ADMIN";
+
   const [users, projects] = await Promise.all([
     getUsersServer(),
-    getProjectsServer(),
+    isAdmin ? getProjectsServer() : Promise.resolve([]),
   ]);
-
-  const user = session.user as SessionUser;
-  const userRole = user.role || "USER";
-
-  const isAdmin = userRole === "ADMIN" || userRole === "ROLE_ADMIN";
 
   return (
     <PageContainer className="space-y-8 pb-20">
@@ -33,7 +27,7 @@ export default async function TeamPage() {
         <div>
           <h1 className="text-2xl font-black text-[#1a1f36] flex items-center gap-3">
             <div className="p-2 bg-indigo-600 rounded-xl text-white shadow-lg shadow-indigo-200">
-              <Users size={24} />
+              <UsersIcon size={24} />
             </div>
             Team Management
           </h1>
@@ -48,7 +42,7 @@ export default async function TeamPage() {
       <div className="space-y-4">
         <div className="flex items-center gap-2 mb-2 px-1">
           <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wide">
-            All Members
+            {isAdmin ? "All Members" : "My Colleagues"}
           </h3>
         </div>
         <UsersTable initialUsers={users} currentUserRole={userRole} />
