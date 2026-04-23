@@ -7,8 +7,15 @@ import { ProjectListItem } from "@/components/projects/ProjectListItem";
 import { Button } from "@/components/ui/button";
 import { Plus, FolderKanban, Search } from "lucide-react";
 import { ProjectsToolbar } from "@/components/projects/ProjectToolbar";
-import { ProjectDetailsDialog } from "@/components/projects/ProjectDetailsDialog";
+import ProjectDetailsPage from "@/app/(dashboard)/projects/[id]/page";
 import { CreateProjectDialog } from "@/components/projects/ProjectDialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "../ui/dialog";
 
 export function ProjectsView({
   initialProjects,
@@ -121,12 +128,29 @@ export function ProjectsView({
         </div>
       )}
 
-      {selectedProject && (
-        <ProjectDetailsDialog
-          project={selectedProject}
-          onClose={() => setSelectedProject(null)}
-        />
-      )}
+      <Dialog
+        open={!!selectedProject}
+        onOpenChange={(isOpen) => {
+          if (!isOpen) setSelectedProject(null);
+        }}
+      >
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold">
+              {selectedProject?.name}
+            </DialogTitle>
+            <DialogDescription>
+              Status: {selectedProject?.status}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="py-4">
+            <p className="text-gray-600 leading-relaxed">
+              {selectedProject?.description}
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <CreateProjectDialog
         isOpen={isCreateOpen}

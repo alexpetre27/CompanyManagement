@@ -16,11 +16,12 @@ import { Project } from "@/types/project";
 import { TechStack } from "@/components/projects/TechStack";
 import { TeamList } from "@/components/projects/TeamList";
 
+// Funcție de fetch direct pe server (Server-side)
 async function getProjectData(
   id: string,
   token: string,
 ): Promise<Project | null> {
-  const apiUrl = process.env.INTERNAL_API_URL || "http://localhost:8080/api";
+  const apiUrl = process.env.INTERNAL_API_URL || "http://backend:8080/api";
 
   try {
     const res = await fetch(`${apiUrl}/projects/${id}`, {
@@ -29,12 +30,13 @@ async function getProjectData(
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      next: { revalidate: 0 },
+      next: { revalidate: 0 }, // Dezactivează cache-ul pentru date fresh
     });
 
     if (!res.ok) return null;
     return await res.json();
   } catch (error) {
+    console.error("Error fetching project:", error);
     return null;
   }
 }
@@ -42,15 +44,19 @@ async function getProjectData(
 export default async function ProjectDetailsPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  const session = await auth();
+  // 1. Așteptăm params conform Next.js 15
+  const { id } = await params;
 
+  // 2. Verificăm sesiunea
+  const session = await auth();
   if (!session?.user || !session.accessToken) {
     redirect("/login");
   }
 
-  const project = await getProjectData(params.id, session.accessToken);
+  // 3. Luăm datele proiectului
+  const project = await getProjectData(id, session.accessToken);
 
   if (!project) {
     return notFound();
@@ -77,6 +83,7 @@ export default async function ProjectDetailsPage({
             <ArrowLeft size={20} />
           </Button>
         </Link>
+
         <div className="flex-1">
           <div className="flex items-center gap-3">
             <h1 className="text-xl font-extrabold text-[#1a1f36]">
@@ -92,6 +99,7 @@ export default async function ProjectDetailsPage({
             Version {project.version || "1.0.0"}
           </p>
         </div>
+
         <Button
           variant="outline"
           size="sm"
@@ -111,7 +119,10 @@ export default async function ProjectDetailsPage({
               {project.description || "No description provided."}
             </p>
 
-            <TechStack technologies={project.techStack || []} />
+            {/* TechStack primește array-ul direct */}
+            <div className="mt-6">
+              <TechStack technologies={project.techStack || []} />
+            </div>
           </Card>
 
           <Card className="p-6 border-none shadow-sm rounded-[24px] bg-white">
@@ -123,25 +134,42 @@ export default async function ProjectDetailsPage({
           <Card className="p-5 border-none shadow-sm rounded-[24px] bg-white space-y-4">
             <div>
               <p className="text-[10px] font-bold text-slate-400 uppercase">
-                Last Updated
+                Details
               </p>
-              <div className="flex items-center gap-2 mt-1 text-slate-700 font-medium text-sm">
-                <Calendar size={16} className="text-slate-400" />{" "}
-                {project.updatedAt || "N/A"}
+              <div className="space-y-3 mt-3">
+                <div className="flex items-center gap-2 text-slate-700 font-medium text-sm">
+                  <Calendar size={16} className="text-slate-400" />
+                  <span className="text-xs text-slate-500">Updated:</span>
+                  {project.updatedAt || "N/A"}
+                </div>
+                <div className="flex items-center gap-2 text-slate-700 font-medium text-sm">
+                  <span className="text-xs text-slate-500">Port:</span>
+                  <code className="bg-slate-100 px-1 rounded text-indigo-600">
+                    {project.port}
+                  </code>
+                </div>
               </div>
             </div>
 
             <div className="pt-4 border-t border-slate-50 space-y-3">
               {project.repoUrl && (
-                <Link href={project.repoUrl} target="_blank">
-                  <Button className="w-full justify-start gap-3 bg-slate-900 text-white hover:bg-slate-800 rounded-xl h-10 text-xs font-bold mb-3">
+                <Link
+                  href={project.repoUrl}
+                  target="_blank"
+                  className="block w-full"
+                >
+                  <Button className="w-full justify-start gap-3 bg-slate-900 text-white hover:bg-slate-800 rounded-xl h-10 text-xs font-bold">
                     <Github size={16} /> Repository
                   </Button>
                 </Link>
               )}
 
               {project.liveUrl && (
-                <Link href={project.liveUrl} target="_blank">
+                <Link
+                  href={project.liveUrl}
+                  target="_blank"
+                  className="block w-full"
+                >
                   <Button
                     variant="outline"
                     className="w-full justify-start gap-3 rounded-xl h-10 text-xs font-bold border-slate-200 text-slate-600"

@@ -70,7 +70,7 @@ export function Sidebar({ role }: SidebarProps) {
 
       <aside
         className={cn(
-          "fixed top-0 left-0 h-screen w-70 bg-white border-r border-slate-200 flex flex-col z-80 transition-transform duration-300 ease-in-out",
+          "fixed top-0 left-0 h-screen w-70 bg-white border-r border-slate-200 flex flex-col z-40 transition-transform duration-300 ease-in-out",
           "lg:sticky lg:translate-x-0",
           open ? "translate-x-0" : "-translate-x-full",
         )}

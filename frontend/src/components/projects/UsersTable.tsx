@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Table,
@@ -32,10 +31,9 @@ import {
   Loader2,
 } from "lucide-react";
 import { User, UsersTableProps } from "@/types/user";
-import { ProjectResponse, FilterOption } from "@/types/project";
 import { useDebounce } from "@/types/useDebounce";
-import FilterDropdownPortal from "./FilterDropdownPortal";
 import { toast } from "sonner";
+import { unassignUserAction } from "@/lib/actions/project";
 
 type SortConfig = {
   key: keyof User;
@@ -43,12 +41,10 @@ type SortConfig = {
 };
 
 export function UsersTable({ initialUsers, currentUserRole }: UsersTableProps) {
-  const router = useRouter();
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search);
   const [role, setRole] = useState("ALL");
   const [project, setProject] = useState("ALL");
-  const [backendProjects, setBackendProjects] = useState<FilterOption[]>([]);
   const [loadingId, setLoadingId] = useState<number | null>(null);
   const [sort, setSort] = useState<SortConfig>({
     key: "name",
@@ -58,38 +54,11 @@ export function UsersTable({ initialUsers, currentUserRole }: UsersTableProps) {
   const isAdmin =
     currentUserRole === "ADMIN" || currentUserRole === "ROLE_ADMIN";
 
-  useEffect(() => {
-    async function fetchProjects() {
-      try {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/projects/microservices`,
-        );
-        const data: ProjectResponse[] = await response.json();
-        const formatted: FilterOption[] = data.map((p) => ({
-          label: p.name,
-          value: p.id.toString(),
-        }));
-        setBackendProjects(formatted);
-      } catch (error) {
-        console.error("Failed to fetch projects for filters", error);
-      }
-    }
-    fetchProjects();
-  }, []);
-
   const handleUnassign = async (userId: number) => {
     setLoadingId(userId);
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/users/${userId}/unassign`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-        },
-      );
-      if (!res.ok) throw new Error();
+      await unassignUserAction(userId);
       toast.success("User removed from project");
-      router.refresh();
     } catch {
       toast.error("Failed to unassign user");
     } finally {
@@ -97,9 +66,8 @@ export function UsersTable({ initialUsers, currentUserRole }: UsersTableProps) {
     }
   };
 
-  const users = useMemo(() => {
-    let list = initialUsers.filter((u) => u.project && u.project !== "0");
-
+  const filteredUsers = useMemo(() => {
+    let list = [...initialUsers];
     if (debouncedSearch) {
       const t = debouncedSearch.toLowerCase();
       list = list.filter(
@@ -108,7 +76,6 @@ export function UsersTable({ initialUsers, currentUserRole }: UsersTableProps) {
           (u.email?.toLowerCase() || "").includes(t),
       );
     }
-
     if (role !== "ALL") list = list.filter((u) => u.role === role);
     if (project !== "ALL") list = list.filter((u) => u.project === project);
 
@@ -132,12 +99,6 @@ export function UsersTable({ initialUsers, currentUserRole }: UsersTableProps) {
     }));
   };
 
-  const clearFilters = () => {
-    setSearch("");
-    setRole("ALL");
-    setProject("ALL");
-  };
-
   return (
     <div className="space-y-6">
       <div className="flex flex-col lg:flex-row gap-3 justify-between">
@@ -158,42 +119,16 @@ export function UsersTable({ initialUsers, currentUserRole }: UsersTableProps) {
             <Button
               variant="ghost"
               size="icon"
-              onClick={clearFilters}
+              onClick={() => {
+                setSearch("");
+                setRole("ALL");
+                setProject("ALL");
+              }}
               className="h-10 w-10 text-slate-400 hover:text-red-500 rounded-xl"
             >
               <Trash2 size={16} />
             </Button>
           )}
-        </div>
-
-        <div className="flex gap-2">
-          <FilterDropdownPortal
-            label="Project"
-            value={project}
-            onChange={setProject}
-            options={[
-              { label: "All Projects", value: "ALL" },
-              ...backendProjects,
-            ]}
-          />
-          <FilterDropdownPortal
-            label="Role"
-            value={role}
-            onChange={setRole}
-            options={[
-              { label: "All Roles", value: "ALL" },
-              {
-                label: "Admin",
-                value: "ROLE_ADMIN",
-                icon: <ShieldCheck size={12} />,
-              },
-              {
-                label: "User",
-                value: "ROLE_USER",
-                icon: <UserIcon size={12} />,
-              },
-            ]}
-          />
         </div>
       </div>
 
@@ -221,7 +156,7 @@ export function UsersTable({ initialUsers, currentUserRole }: UsersTableProps) {
           </TableHeader>
           <TableBody>
             <AnimatePresence mode="popLayout">
-              {users.map((user) => (
+              {filteredUsers.map((user) => (
                 <motion.tr
                   key={user.id}
                   layout
@@ -256,7 +191,7 @@ export function UsersTable({ initialUsers, currentUserRole }: UsersTableProps) {
                   <TableCell className="py-4 px-6">
                     <div className="flex items-center gap-2 text-indigo-600 font-bold text-xs">
                       <Briefcase size={12} className="opacity-60" />
-                      {user.project}
+                      {user.project || "Unassigned"}
                     </div>
                   </TableCell>
                   {isAdmin && (
@@ -303,16 +238,6 @@ export function UsersTable({ initialUsers, currentUserRole }: UsersTableProps) {
             </AnimatePresence>
           </TableBody>
         </Table>
-        {users.length === 0 && (
-          <div className="py-20 text-center">
-            <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-50 text-slate-200 mb-4">
-              <Search size={24} />
-            </div>
-            <p className="text-sm font-bold text-slate-400">
-              No active members found
-            </p>
-          </div>
-        )}
       </div>
     </div>
   );
