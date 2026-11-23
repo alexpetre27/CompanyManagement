@@ -1,26 +1,21 @@
 package com.company.management.security;
 
-import java.io.IOException;
-
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
 @Component
 public class JwtAuthEntryPoint implements AuthenticationEntryPoint {
- @Override
+
+    @Override
     public void commence(HttpServletRequest request,
                          HttpServletResponse response,
-                         AuthenticationException authException) 
-            throws IOException, ServletException {
-
-        response.setContentType("application/json");
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        response.getWriter().write("{\"message\":\"Unauthorized: " + authException.getMessage() + "\"}");
+                         AuthenticationException authException) throws IOException {
+        JsonErrorWriter.write(response, HttpServletResponse.SC_UNAUTHORIZED,
+                "Unauthorized", "Authentication is required", request.getRequestURI());
     }
 }
-
-    

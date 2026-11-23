@@ -1,25 +1,32 @@
-import { ProjectMember } from "@/types/project";
-import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import type { ProjectMember } from "@/types/project";
 import { Users } from "lucide-react";
 
-export function TeamList({ team }: { team: ProjectMember[] }) {
+export function TeamList({
+  team,
+  manageHref,
+}: {
+  team: ProjectMember[];
+  manageHref?: string;
+}) {
   return (
     <>
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-sm font-bold text-[#1a1f36] flex items-center gap-2">
           <Users size={16} className="text-[#6366f1]" /> Team Members
         </h2>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="text-xs text-[#6366f1] font-bold hover:bg-indigo-50"
-        >
-          Manage Team
-        </Button>
+        {manageHref && (
+          <Link
+            href={manageHref}
+            className="text-xs text-[#6366f1] font-bold hover:bg-indigo-50 px-3 py-1.5 rounded-lg"
+          >
+            Manage Team
+          </Link>
+        )}
       </div>
 
       <div className="space-y-3">
-        {team && team.length > 0 ? (
+        {team.length > 0 ? (
           team.map((member) => (
             <div
               key={member.id}
@@ -27,7 +34,7 @@ export function TeamList({ team }: { team: ProjectMember[] }) {
             >
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-bold uppercase">
-                  {member.name.substring(0, 2)}
+                  {(member.name || "?").substring(0, 2)}
                 </div>
                 <div>
                   <p className="text-xs font-bold text-slate-700">

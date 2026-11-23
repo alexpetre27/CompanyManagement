@@ -7,11 +7,11 @@ import { User, Lock, Bell, Save, Moon, Upload, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import {
-  updateUserProfile,
-  uploadUserAvatar,
-  changeUserPassword,
-  updateUserPreferences,
-} from "@/lib/services/user.service";
+  updateProfileAction,
+  uploadAvatarAction,
+  changePasswordAction,
+  updatePreferencesAction,
+} from "@/lib/actions/user";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { SettingsViewProps } from "@/types/user";
 
@@ -32,16 +32,9 @@ export function SettingsView({ user }: SettingsViewProps) {
     email: user.email,
   });
 
-  const getInitialAvatarUrl = (path?: string | null) => {
-    if (!path) return "";
-    if (path.startsWith("http")) return path;
-    const baseUrl =
-      process.env.NEXT_PUBLIC_API_URL?.replace("/api", "") ||
-      "http://localhost:8080";
-    return `${baseUrl}${path}`;
-  };
-
-  const [avatarUrl, setAvatarUrl] = useState(getInitialAvatarUrl(user.avatar));
+  // Uploaded avatars are relative ("/uploads/...") and served through the Next.js
+  // /uploads proxy route; Google avatars are absolute URLs.
+  const [avatarUrl, setAvatarUrl] = useState(user.avatar || "");
 
   const [passData, setPassData] = useState({
     currentPassword: "",
@@ -55,38 +48,44 @@ export function SettingsView({ user }: SettingsViewProps) {
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    e.target.value = "";
     if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("Image must be at most 2 MB.");
+      return;
+    }
 
+    const previousUrl = avatarUrl;
     const localUrl = URL.createObjectURL(file);
     setAvatarUrl(localUrl);
     setLoading(true);
 
-    try {
-      const response = await uploadUserAvatar(file);
-      const backendUrl =
-        process.env.NEXT_PUBLIC_API_URL?.replace("/api", "") ||
-        "http://localhost:8080";
-      setAvatarUrl(`${backendUrl}${response.avatar}`);
-      toast.success("Avatar updated successfully!");
-      router.refresh();
-    } catch (_error) {
-      toast.error("Failed to upload avatar.");
-    } finally {
-      setLoading(false);
+    const formData = new FormData();
+    formData.append("file", file);
+    const result = await uploadAvatarAction(formData);
+    setLoading(false);
+    URL.revokeObjectURL(localUrl);
+
+    if (!result.success) {
+      setAvatarUrl(previousUrl);
+      toast.error(result.message || "Failed to upload avatar.");
+      return;
     }
+    setAvatarUrl(result.data.avatar);
+    toast.success("Avatar updated successfully!");
+    router.refresh();
   };
 
   const handleSaveProfile = async () => {
     setLoading(true);
-    try {
-      await updateUserProfile(profileData);
-      toast.success("Profile updated successfully!");
-      router.refresh();
-    } catch (_error) {
-      toast.error("Could not update profile.");
-    } finally {
-      setLoading(false);
+    const result = await updateProfileAction(profileData);
+    setLoading(false);
+    if (!result.success) {
+      toast.error(result.message || "Could not update profile.");
+      return;
     }
+    toast.success("Profile updated successfully!");
+    router.refresh();
   };
 
   const handleChangePassword = async () => {
@@ -94,21 +93,22 @@ export function SettingsView({ user }: SettingsViewProps) {
       toast.error("Please fill in both password fields.");
       return;
     }
-    setLoading(true);
-    try {
-      await changeUserPassword({
-        oldPassword: passData.currentPassword,
-        newPassword: passData.newPassword,
-      });
-      toast.success("Password changed successfully!");
-      setPassData({ currentPassword: "", newPassword: "" });
-    } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Failed to change password.";
-      toast.error(errorMessage);
-    } finally {
-      setLoading(false);
+    if (passData.newPassword.length < 6) {
+      toast.error("New password must be at least 6 characters.");
+      return;
     }
+    setLoading(true);
+    const result = await changePasswordAction({
+      oldPassword: passData.currentPassword,
+      newPassword: passData.newPassword,
+    });
+    setLoading(false);
+    if (!result.success) {
+      toast.error(result.message || "Failed to change password.");
+      return;
+    }
+    toast.success("Password changed successfully!");
+    setPassData({ currentPassword: "", newPassword: "" });
   };
 
   const handleTogglePreference = async (
@@ -123,10 +123,9 @@ export function SettingsView({ user }: SettingsViewProps) {
 
     setPreferences((prev) => ({ ...prev, [key]: newValue }));
 
-    try {
-      await updateUserPreferences({ [key]: newValue });
-    } catch (_error) {
-      toast.error("Failed to save preference.");
+    const result = await updatePreferencesAction({ [key]: newValue });
+    if (!result.success) {
+      toast.error(result.message || "Failed to save preference.");
       setPreferences((prev) => ({
         ...prev,
         [key]:

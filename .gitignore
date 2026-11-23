@@ -1,0 +1,13 @@
+# Secrets — never commit real values; copy .env.example to .env instead
+.env
+.env.*
+!.env.example
+
+# User uploads (runtime data)
+uploads/
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

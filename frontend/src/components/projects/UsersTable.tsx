@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Table,
@@ -17,7 +18,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
+
 } from "@/components/ui/dropdown-menu";
 import {
   Search,
@@ -31,9 +32,9 @@ import {
   Loader2,
 } from "lucide-react";
 import { User, UsersTableProps } from "@/types/user";
-import { useDebounce } from "@/types/useDebounce";
+import { useDebounce } from "@/lib/useDebounce";
 import { toast } from "sonner";
-import { unassignUserAction } from "@/lib/actions/project";
+import { unassignUserAction } from "@/lib/actions/user";
 
 type SortConfig = {
   key: keyof User;
@@ -51,19 +52,20 @@ export function UsersTable({ initialUsers, currentUserRole }: UsersTableProps) {
     direction: "ascending",
   });
 
+  const router = useRouter();
   const isAdmin =
-    currentUserRole === "ADMIN" || currentUserRole === "ROLE_ADMIN";
+    currentUserRole === "ADMIN";
 
   const handleUnassign = async (userId: number) => {
     setLoadingId(userId);
-    try {
-      await unassignUserAction(userId);
-      toast.success("User removed from project");
-    } catch {
-      toast.error("Failed to unassign user");
-    } finally {
-      setLoadingId(null);
+    const result = await unassignUserAction(userId);
+    setLoadingId(null);
+    if (!result.success) {
+      toast.error(result.message || "Failed to unassign user");
+      return;
     }
+    toast.success("User removed from project");
+    router.refresh();
   };
 
   const filteredUsers = useMemo(() => {
@@ -192,6 +194,11 @@ export function UsersTable({ initialUsers, currentUserRole }: UsersTableProps) {
                     <div className="flex items-center gap-2 text-indigo-600 font-bold text-xs">
                       <Briefcase size={12} className="opacity-60" />
                       {user.project || "Unassigned"}
+                      {user.projectRole && (
+                        <span className="text-[10px] font-medium text-slate-400 capitalize">
+                          · {user.projectRole.toLowerCase()}
+                        </span>
+                      )}
                     </div>
                   </TableCell>
                   {isAdmin && (
@@ -210,14 +217,10 @@ export function UsersTable({ initialUsers, currentUserRole }: UsersTableProps) {
                           align="end"
                           className="rounded-xl w-48 shadow-2xl border-slate-100"
                         >
-                          <DropdownMenuItem className="text-xs font-medium cursor-pointer">
-                            View profile
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
                           <DropdownMenuItem
                             className="text-red-600 text-xs font-bold cursor-pointer"
                             onClick={() => handleUnassign(user.id)}
-                            disabled={loadingId === user.id}
+                            disabled={loadingId === user.id || user.projectId == null}
                           >
                             {loadingId === user.id ? (
                               <Loader2

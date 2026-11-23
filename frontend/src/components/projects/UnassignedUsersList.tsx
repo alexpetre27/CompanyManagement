@@ -1,17 +1,19 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2, UserPlus, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { ProjectSelectorPortal } from "@/components/projects/ProjectSelectorPortal";
-import { User } from "@/types/user";
-import { Project } from "@/types/project";
+import { assignUserAction } from "@/lib/actions/user";
+import type { ProjectRole, User } from "@/types/user";
+import type { Project } from "@/types/project";
 
 interface SelectionData {
   projectId: string;
-  role: string;
+  projectRole: ProjectRole;
 }
 
 type SelectionState = Record<number, SelectionData>;
@@ -30,92 +32,81 @@ interface UserRowProps {
   onAssign: (userId: number) => void;
 }
 
-export function UnassignedUsersList({
-  users,
-  projects,
-}: UnassignedUsersListProps) {
-  const [localUsers, setLocalUsers] = useState<User[]>(users);
+const PROJECT_ROLES: { value: ProjectRole; label: string }[] = [
+  { value: "DEVELOPER", label: "Developer" },
+  { value: "MANAGER", label: "Manager" },
+  { value: "DESIGNER", label: "Designer" },
+];
+
+export function UnassignedUsersList({ users, projects }: UnassignedUsersListProps) {
+  const router = useRouter();
   const [loadingIds, setLoadingIds] = useState<Set<number>>(new Set());
   const [selections, setSelections] = useState<SelectionState>({});
 
-  const unassignedUsers = useMemo(() => {
-    return localUsers.filter((u) => {
-      if (u.role?.includes("ADMIN")) return false;
-      const projectValue = String(u.project ?? "")
-        .trim()
-        .toLowerCase();
-      return !projectValue || ["0", "null", "undefined"].includes(projectValue);
-    });
-  }, [localUsers]);
-
-  const updateSelection = useCallback(
-    (userId: number, data: Partial<SelectionData>) => {
-      setSelections((prev) => ({
-        ...prev,
-        [userId]: {
-          projectId: prev[userId]?.projectId || "",
-          role: prev[userId]?.role || "ROLE_USER",
-          ...data,
-        },
-      }));
-    },
-    [],
+  const unassignedUsers = useMemo(
+    () => users.filter((u) => u.role !== "ADMIN" && u.projectId == null),
+    [users],
   );
 
-  const assignUser = useCallback(
-    async (userId: number) => {
+  const updateSelection = useCallback((userId: number, data: Partial<SelectionData>) => {
+    setSelections((prev) => ({
+      ...prev,
+      [userId]: {
+        projectId: prev[userId]?.projectId || "",
+        projectRole: prev[userId]?.projectRole || "DEVELOPER",
+        ...data,
+      },
+    }));
+  }, []);
+
+  const assignOne = useCallback(
+    async (userId: number): Promise<boolean> => {
       const selection = selections[userId];
       if (!selection?.projectId) {
-        toast.error("Selectează un proiect");
+        toast.error("Select a project first");
         return false;
       }
-
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-      if (!apiUrl) return false;
 
       setLoadingIds((prev) => new Set(prev).add(userId));
+      const result = await assignUserAction(userId, Number(selection.projectId), selection.projectRole);
+      setLoadingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(userId);
+        return next;
+      });
 
-      try {
-        const res = await fetch(`${apiUrl}/users/${userId}/assign`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(selection),
-        });
-
-        if (!res.ok) throw new Error();
-
-        setLocalUsers((prev) => prev.filter((u) => u.id !== userId));
-        return true;
-      } catch {
-        toast.error(`Eroare la asignarea utilizatorului ${userId}`);
+      if (!result.success) {
+        toast.error(result.message);
         return false;
-      } finally {
-        setLoadingIds((prev) => {
-          const next = new Set(prev);
-          next.delete(userId);
-          return next;
-        });
       }
+      return true;
     },
     [selections],
   );
 
+  const handleAssign = useCallback(
+    async (userId: number) => {
+      if (await assignOne(userId)) {
+        toast.success("User assigned");
+        router.refresh();
+      }
+    },
+    [assignOne, router],
+  );
+
   const assignAll = useCallback(async () => {
-    const usersToAssign = unassignedUsers.filter(
-      (u) => selections[u.id]?.projectId,
-    );
-    if (!usersToAssign.length) {
-      toast.error("Nu există utilizatori pregătiți");
+    const ready = unassignedUsers.filter((u) => selections[u.id]?.projectId);
+    if (!ready.length) {
+      toast.error("No users have a project selected");
       return;
     }
-
-    const results = await Promise.all(
-      usersToAssign.map((u) => assignUser(u.id)),
-    );
+    const results = await Promise.all(ready.map((u) => assignOne(u.id)));
     const successCount = results.filter(Boolean).length;
-
-    if (successCount > 0) toast.success(`${successCount} utilizatori asignați`);
-  }, [unassignedUsers, selections, assignUser]);
+    if (successCount > 0) {
+      toast.success(`${successCount} user(s) assigned`);
+      router.refresh();
+    }
+  }, [unassignedUsers, selections, assignOne, router]);
 
   return (
     <Card className="mb-8 border border-indigo-100 rounded-[24px] bg-white shadow-lg overflow-hidden">
@@ -135,11 +126,7 @@ export function UnassignedUsersList({
             disabled={loadingIds.size > 0}
             className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold px-6"
           >
-            {loadingIds.size > 0 ? (
-              <Loader2 className="animate-spin" />
-            ) : (
-              "Assign All"
-            )}
+            {loadingIds.size > 0 ? <Loader2 className="animate-spin" /> : "Assign All"}
           </Button>
         )}
       </div>
@@ -158,7 +145,7 @@ export function UnassignedUsersList({
               loading={loadingIds.has(user.id)}
               selection={selections[user.id]}
               onSelect={updateSelection}
-              onAssign={assignUser}
+              onAssign={handleAssign}
             />
           ))
         )}
@@ -167,14 +154,7 @@ export function UnassignedUsersList({
   );
 }
 
-function UserRow({
-  user,
-  projects,
-  loading,
-  selection,
-  onSelect,
-  onAssign,
-}: UserRowProps) {
+function UserRow({ user, projects, loading, selection, onSelect, onAssign }: UserRowProps) {
   return (
     <div className="p-6 flex flex-col lg:flex-row lg:items-center gap-6 hover:bg-slate-50/50 transition-colors">
       <div className="flex items-center gap-4 min-w-60">
@@ -182,12 +162,8 @@ function UserRow({
           {(user.name || "U").slice(0, 2).toUpperCase()}
         </div>
         <div className="min-w-0">
-          <p className="font-bold text-slate-800 truncate">
-            {user.name || "Unknown User"}
-          </p>
-          <p className="text-xs font-semibold text-slate-400 truncate">
-            {user.email}
-          </p>
+          <p className="font-bold text-slate-800 truncate">{user.name || "Unknown User"}</p>
+          <p className="text-xs font-semibold text-slate-400 truncate">{user.email}</p>
         </div>
       </div>
 
@@ -200,13 +176,16 @@ function UserRow({
         />
         <div className="relative">
           <select
-            value={selection?.role || "ROLE_USER"}
-            onChange={(e) => onSelect(user.id, { role: e.target.value })}
+            value={selection?.projectRole || "DEVELOPER"}
+            onChange={(e) => onSelect(user.id, { projectRole: e.target.value as ProjectRole })}
+            aria-label="Project role"
             className="w-full h-11 rounded-xl border border-slate-200 px-4 font-bold text-sm text-slate-600 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50 bg-white appearance-none transition-all"
           >
-            <option value="ROLE_USER">Developer</option>
-            <option value="ROLE_MANAGER">Manager</option>
-            <option value="ROLE_DESIGNER">Designer</option>
+            {PROJECT_ROLES.map((r) => (
+              <option key={r.value} value={r.value}>
+                {r.label}
+              </option>
+            ))}
           </select>
           <ShieldCheck
             size={16}

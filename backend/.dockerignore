@@ -5,3 +5,5 @@ target
 *.iml
 *.log
 HELP.md
+uploads
+.env*

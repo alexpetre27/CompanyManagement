@@ -4,6 +4,7 @@ import com.company.management.users.model.User;
 import jakarta.persistence.*;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -37,8 +38,11 @@ public class Microservice {
     @Column(name = "technology")
     private List<String> techStack = new ArrayList<>();
 
-    // RELAȚIA NOUĂ: Mapăm utilizatorii care au acest microservice_id
-    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL)
+    /**
+     * Users assigned to this project (owning side is {@link User#getProject()}).
+     * No cascade: removing a project must never delete user accounts.
+     */
+    @OneToMany(mappedBy = "project")
     private List<User> teamMembers = new ArrayList<>();
 
     public Microservice() {}
@@ -65,7 +69,6 @@ public class Microservice {
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
     public List<String> getTechStack() { return techStack; }
     public void setTechStack(List<String> techStack) { this.techStack = techStack; }
-
     public List<User> getTeamMembers() { return teamMembers; }
     public void setTeamMembers(List<User> teamMembers) { this.teamMembers = teamMembers; }
 }

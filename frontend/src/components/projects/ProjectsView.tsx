@@ -1,21 +1,14 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Project } from "@/types/project";
+import { useRouter } from "next/navigation";
+import type { Project } from "@/types/project";
 import { ProjectCard } from "@/components/projects/ProjectCard";
 import { ProjectListItem } from "@/components/projects/ProjectListItem";
 import { Button } from "@/components/ui/button";
 import { Plus, FolderKanban, Search } from "lucide-react";
 import { ProjectsToolbar } from "@/components/projects/ProjectToolbar";
-import ProjectDetailsPage from "@/app/(dashboard)/projects/[id]/page";
-import { CreateProjectDialog } from "@/components/projects/ProjectDialog";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "../ui/dialog";
+import { CreateProjectDialog } from "@/components/projects/CreateProjectDialog";
 
 export function ProjectsView({
   initialProjects,
@@ -24,29 +17,28 @@ export function ProjectsView({
   initialProjects: Project[];
   isAdmin: boolean;
 }) {
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("ALL");
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 
   const filteredProjects = useMemo(() => {
+    const term = searchTerm.toLowerCase();
     return initialProjects.filter((project) => {
-      const term = searchTerm.toLowerCase();
       const matchesSearch =
         project.name?.toLowerCase().includes(term) ||
-        (project.description &&
-          project.description.toLowerCase().includes(term));
-
-      const projectStatusNormalized = project.status?.toUpperCase() || "";
-      const filterNormalized = filterStatus.toUpperCase();
+        (project.description?.toLowerCase().includes(term) ?? false);
 
       const matchesFilter =
-        filterStatus === "ALL" || projectStatusNormalized === filterNormalized;
+        filterStatus === "ALL" ||
+        (project.status?.toUpperCase() || "") === filterStatus.toUpperCase();
 
       return matchesSearch && matchesFilter;
     });
   }, [initialProjects, searchTerm, filterStatus]);
+
+  const openProject = (project: Project) => router.push(`/projects/${project.id}`);
 
   return (
     <div className="space-y-8">
@@ -59,7 +51,7 @@ export function ProjectsView({
             Projects
           </h1>
           <p className="text-sm text-slate-500 font-medium mt-2 ml-1">
-            Overview of your team's ongoing work and status.
+            Overview of your team&apos;s ongoing work and status.
           </p>
         </div>
 
@@ -92,17 +84,9 @@ export function ProjectsView({
         >
           {filteredProjects.map((project) =>
             viewMode === "grid" ? (
-              <ProjectCard
-                key={project.id}
-                project={project}
-                onClick={(p: Project) => setSelectedProject(p)}
-              />
+              <ProjectCard key={project.id} project={project} onClick={openProject} />
             ) : (
-              <ProjectListItem
-                key={project.id}
-                project={project}
-                onClick={(p: Project) => setSelectedProject(p)}
-              />
+              <ProjectListItem key={project.id} project={project} onClick={openProject} />
             ),
           )}
         </div>
@@ -128,35 +112,13 @@ export function ProjectsView({
         </div>
       )}
 
-      <Dialog
-        open={!!selectedProject}
-        onOpenChange={(isOpen) => {
-          if (!isOpen) setSelectedProject(null);
-        }}
-      >
-        <DialogContent className="sm:max-w-2xl">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-bold">
-              {selectedProject?.name}
-            </DialogTitle>
-            <DialogDescription>
-              Status: {selectedProject?.status}
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="py-4">
-            <p className="text-gray-600 leading-relaxed">
-              {selectedProject?.description}
-            </p>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <CreateProjectDialog
-        isOpen={isCreateOpen}
-        onOpenChange={setIsCreateOpen}
-        isAdmin={isAdmin}
-      />
+      {isAdmin && (
+        <CreateProjectDialog
+          isOpen={isCreateOpen}
+          onOpenChange={setIsCreateOpen}
+          isAdmin={isAdmin}
+        />
+      )}
     </div>
   );
 }

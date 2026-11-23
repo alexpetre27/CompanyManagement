@@ -2,7 +2,7 @@ import { auth } from "@/auth";
 import { redirect, notFound } from "next/navigation";
 import { ShieldCheck, Users, Activity, Server, Clock } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { getAdminDashboardData } from "@/types/data";
+import { getAdminDashboardData } from "@/lib/server/data";
 import { ControlPanel } from "@/components/admin/ControlPanel";
 import { AuditTerminal } from "@/components/admin/AuditTerminal";
 import { User } from "@/types/user";
@@ -13,8 +13,8 @@ export default async function AdminPage() {
   const session = await auth();
   if (!session?.user) redirect("/login");
 
-  const role = (session.user as { role?: string }).role || "USER";
-  if (role !== "ADMIN") return notFound();
+  const role = session.user.role || "USER";
+  if (role !== "ADMIN") notFound();
 
   const { stats, recentUsers, logs, serverTime } =
     await getAdminDashboardData();
@@ -82,7 +82,7 @@ export default async function AdminPage() {
           label="Server Time"
           value={
             serverTime ||
-            new Date().toLocaleTimeString("ro-RO", {
+            new Date().toLocaleTimeString("en-GB", {
               hour: "2-digit",
               minute: "2-digit",
             })

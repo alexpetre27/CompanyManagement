@@ -1,27 +1,35 @@
 package com.company.management.auth.service;
 
-import com.company.management.auth.dto.AuthDTOs.*; 
+import com.company.management.auth.dto.AuthDTOs.LoginRequestDTO;
+import com.company.management.auth.dto.AuthDTOs.LoginResponseDTO;
+import com.company.management.auth.dto.AuthDTOs.SocialLoginRequestDTO;
 import com.company.management.security.JwtUtil;
 import com.company.management.users.model.User;
 import com.company.management.users.repository.UserRepository;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
+import java.security.SecureRandom;
+import java.util.Base64;
+import java.util.Locale;
 
 @Service
 public class AuthService {
 
+    private static final SecureRandom RANDOM = new SecureRandom();
+
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder; 
+    private final PasswordEncoder passwordEncoder;
 
-    public AuthService(AuthenticationManager authenticationManager, 
-                       JwtUtil jwtUtil, 
+    public AuthService(AuthenticationManager authenticationManager,
+                       JwtUtil jwtUtil,
                        UserRepository userRepository,
                        PasswordEncoder passwordEncoder) {
         this.authenticationManager = authenticationManager;
@@ -32,85 +40,65 @@ public class AuthService {
 
     public LoginResponseDTO login(LoginRequestDTO dto) {
         Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        dto.identifier(),
-                        dto.password()
-                )
-        );
+                new UsernamePasswordAuthenticationToken(dto.identifier(), dto.password()));
 
-        String username = authentication.getName();
-
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        String token = jwtUtil.generateToken(user.getUsername());
-
-        return new LoginResponseDTO(
-            token, 
-            user.getUsername(), 
-            user.getEmail(), 
-            user.getRole(), 
-            user.getAvatar()
-        );
+        User user = userRepository.findByUsername(authentication.getName())
+                .orElseThrow(() -> new BadCredentialsException("Invalid credentials"));
+        return toResponse(user);
     }
 
-    public LoginResponseDTO register(RegisterRequestDTO dto) {
-        if (userRepository.findByUsername(dto.username()).isPresent()) {
-            throw new RuntimeException("Username already exists");
-        }
-        if (userRepository.findByEmail(dto.email()).isPresent()) {
-            throw new RuntimeException("Email already exists");
-        }
-
-        User user = new User();
-        user.setUsername(dto.username());
-        user.setEmail(dto.email());
-        user.setPassword(passwordEncoder.encode(dto.password()));
-        user.setRole("USER"); 
-
-        userRepository.save(user);
-
-        String token = jwtUtil.generateToken(user.getUsername());
-
-        return new LoginResponseDTO(
-            token, 
-            user.getUsername(), 
-            user.getEmail(), 
-            user.getRole(), 
-            user.getAvatar()
-        );
-    }
-
+    /** Caller (AuthController) has already verified that the request comes from the trusted frontend. */
+    @Transactional
     public LoginResponseDTO socialLogin(SocialLoginRequestDTO dto) {
-        Optional<User> existingUser = userRepository.findByEmail(dto.email());
+        String email = dto.email().trim().toLowerCase(Locale.ROOT);
+        User user = userRepository.findByEmailIgnoreCase(email)
+                .map(existing -> {
+                    if (dto.avatar() != null && !dto.avatar().equals(existing.getAvatar())) {
+                        existing.setAvatar(dto.avatar());
+                    }
+                    return existing;
+                })
+                .orElseGet(() -> createSocialUser(email, dto));
 
-        User user;
-        if (existingUser.isPresent()) {
-            user = existingUser.get();
-            if (dto.avatar() != null && !dto.avatar().equals(user.getAvatar())) {
-                user.setAvatar(dto.avatar());
-                userRepository.save(user);
-            }
-        } else {
-            user = new User();
-            user.setEmail(dto.email());
-            user.setUsername(dto.username() != null ? dto.username() : dto.email().split("@")[0]);
-            user.setAvatar(dto.avatar());
-            user.setRole("USER");
-            
-            user.setPassword(passwordEncoder.encode("GOOGLE_AUTH_" + System.currentTimeMillis()));
-            
-            userRepository.save(user);
+        return toResponse(userRepository.save(user));
+    }
+
+    private User createSocialUser(String email, SocialLoginRequestDTO dto) {
+        User user = new User();
+        user.setEmail(email);
+        user.setUsername(uniqueUsername(dto.username() != null && !dto.username().isBlank()
+                ? dto.username()
+                : email.substring(0, email.indexOf('@'))));
+        user.setAvatar(dto.avatar());
+        user.setRole("USER");
+        // Social accounts never log in with a password; store an unguessable random one.
+        byte[] randomPassword = new byte[32];
+        RANDOM.nextBytes(randomPassword);
+        user.setPassword(passwordEncoder.encode(Base64.getEncoder().encodeToString(randomPassword)));
+        return user;
+    }
+
+    /** Google display names may contain spaces or collide with existing usernames. */
+    private String uniqueUsername(String desired) {
+        String base = desired.trim().toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9._-]+", "_");
+        if (base.length() < 3) base = "user_" + base;
+        if (base.length() > 40) base = base.substring(0, 40);
+        String candidate = base;
+        int suffix = 1;
+        while (userRepository.existsByUsername(candidate)) {
+            candidate = base + "_" + suffix++;
         }
+        return candidate;
+    }
 
-        String token = jwtUtil.generateToken(user.getUsername());
-
+    private LoginResponseDTO toResponse(User user) {
         return new LoginResponseDTO(
-            token, 
-            user.getUsername(), 
-            user.getEmail(), 
-            user.getRole(), 
-            user.getAvatar()
+                jwtUtil.generateToken(user.getId()),
+                jwtUtil.getExpirationMs(),
+                user.getUsername(),
+                user.getEmail(),
+                user.getRole(),
+                user.getAvatar()
         );
     }
 }

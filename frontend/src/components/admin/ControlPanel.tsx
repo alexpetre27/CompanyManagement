@@ -5,21 +5,21 @@ import { Card } from "@/components/ui/card";
 import {
   Power,
   RefreshCw,
-  Database,
+  Eraser,
   Lock,
   ShieldAlert,
   LucideIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { adminAction } from "@/types/actions";
+import { adminAction, type AdminActionKey } from "@/lib/actions/admin";
 
 type BtnColor = "indigo" | "orange" | "slate" | "rose";
 
 export function ControlPanel() {
   const [loading, setLoading] = useState<string | null>(null);
 
-  const execute = async (actionKey: string, label: string) => {
+  const execute = async (actionKey: AdminActionKey, label: string) => {
     if (!confirm(`CONFIRM: Execute ${label}?`)) return;
 
     setLoading(actionKey);
@@ -52,25 +52,25 @@ export function ControlPanel() {
           onClick={() => execute("restart", "Restart API")}
         />
         <Btn
-          icon={Database}
-          label="Flush DB"
+          icon={Eraser}
+          label="Flush Cache"
           color="orange"
           loading={loading === "flush"}
           onClick={() => execute("flush", "Flush Cache")}
         />
         <Btn
           icon={Lock}
-          label="Lockdown"
+          label="Maintenance"
           color="slate"
           loading={loading === "lock"}
-          onClick={() => execute("lock", "System Lockdown")}
+          onClick={() => execute("lock", "Toggle maintenance mode (only admins can use the API)")}
         />
         <Btn
           icon={Power}
           label="Shutdown"
           color="rose"
           loading={loading === "kill"}
-          onClick={() => execute("kill", "Emergency Stop")}
+          onClick={() => execute("kill", "Emergency Stop (the backend will exit)")}
         />
       </div>
     </Card>

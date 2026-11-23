@@ -7,7 +7,7 @@ export function TechStack({ technologies }: { technologies: string[] }) {
         Tech Stack
       </h3>
       <div className="flex flex-wrap gap-2">
-        {technologies.map((tech) => (
+        {Array.from(new Set(technologies)).map((tech) => (
           <span
             key={tech}
             className="px-3 py-1.5 bg-slate-50 text-slate-600 text-xs font-bold rounded-lg border border-slate-100"

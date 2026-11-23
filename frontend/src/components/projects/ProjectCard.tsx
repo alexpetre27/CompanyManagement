@@ -12,7 +12,8 @@ export function ProjectCard({ project, onClick }: ProjectCardProps) {
     DEFAULT: "bg-slate-50 text-slate-600 border-slate-100",
   };
 
-  const statusStyle = statusColors[project.status] || statusColors.DEFAULT;
+  const status = (project.status || "UNKNOWN").toUpperCase();
+  const statusStyle = statusColors[status] || statusColors.DEFAULT;
 
   return (
     <Card
@@ -23,7 +24,7 @@ export function ProjectCard({ project, onClick }: ProjectCardProps) {
         <span
           className={`text-[10px] font-bold px-2 py-1 rounded-lg border ${statusStyle}`}
         >
-          {project.status.replace("_", " ")}
+          {status.replace("_", " ")}
         </span>
         <div className="text-slate-300">
           <MoreVertical size={16} />

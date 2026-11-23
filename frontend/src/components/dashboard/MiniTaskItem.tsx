@@ -1,13 +1,29 @@
-import { ChevronRight } from "lucide-react";
-import { Task } from "@/types/dashboard";
+import { Check, Loader2 } from "lucide-react";
+import type { Task } from "@/types/dashboard";
 
-export function TaskItemMini({ title, projectName, isCompleted }: Task) {
+interface TaskItemMiniProps extends Task {
+  onToggle?: () => void;
+  pending?: boolean;
+}
+
+export function TaskItemMini({
+  title,
+  projectName,
+  isCompleted,
+  onToggle,
+  pending,
+}: TaskItemMiniProps) {
   return (
-    <div
-      className="flex items-center gap-3 p-3 border
+    <button
+      type="button"
+      onClick={onToggle}
+      disabled={pending}
+      aria-pressed={isCompleted}
+      title={isCompleted ? "Mark as not done" : "Mark as done"}
+      className="w-full text-left flex items-center gap-3 p-3 border
                   border-slate-50 rounded-2xl hover:border-indigo-100
-                  hover:bg-slate-50/50 transition-all duration-200 
-                   cursor-pointer group bg-white active:scale-[0.98]"
+                  hover:bg-slate-50/50 transition-all duration-200
+                   cursor-pointer group bg-white active:scale-[0.98] disabled:opacity-60"
     >
       <div
         className={`w-1 h-8 rounded-full ${
@@ -24,10 +40,19 @@ export function TaskItemMini({ title, projectName, isCompleted }: Task) {
         </p>
         <p className="text-[10px] text-slate-400 truncate">{projectName}</p>
       </div>
-      <ChevronRight
-        size={14}
-        className="text-slate-200 group-hover:text-indigo-300 transition-colors"
-      />
-    </div>
+      <div
+        className={`w-5 h-5 rounded-md border flex items-center justify-center transition-colors ${
+          isCompleted
+            ? "bg-green-500 border-green-500 text-white"
+            : "border-slate-200 text-transparent group-hover:border-indigo-300"
+        }`}
+      >
+        {pending ? (
+          <Loader2 size={12} className="animate-spin text-slate-400" />
+        ) : (
+          <Check size={12} />
+        )}
+      </div>
+    </button>
   );
 }

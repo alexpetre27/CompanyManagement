@@ -9,70 +9,55 @@ export interface ServiceHealth {
   latency: string;
 }
 
+const DOWN: Omit<ServiceHealth, "id" | "name" | "type"> = {
+  status: "downtime",
+  uptime: "0%",
+  latency: "-",
+};
+
 export async function checkSpringBootBackend(): Promise<ServiceHealth[]> {
   const start = performance.now();
-  const results: ServiceHealth[] = [];
   const url = `${MONITORING_CONFIG.springBootUrl}/actuator/health`;
 
   try {
-    console.log(`[Health Check] Încerc conectare la: ${url}`);
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000);
-
     const res = await fetch(url, {
       method: "GET",
-      signal: controller.signal,
+      signal: AbortSignal.timeout(5000),
       cache: "no-store",
     });
-    console.log(`[Health Check] Răspuns status: ${res.status}`);
-    if (!res.ok) throw new Error(`Status code ${res.status}`);
-    clearTimeout(timeoutId);
-    const end = performance.now();
-    const latency = Math.round(end - start);
+    const latency = Math.round(performance.now() - start);
 
-    const data = await res.json();
+    // Spring answers 503 with a JSON body when a component (e.g. the DB) is down.
+    const data = await res.json().catch(() => null);
+    if (!data?.status) throw new Error(`Unexpected health response (HTTP ${res.status})`);
 
-    results.push({
-      id: "spring-backend",
-      name: "Spring Boot API",
-      type: "Core Backend",
-      status: data.status === "UP" ? "operational" : "downtime",
-      uptime: data.status === "UP" ? "100%" : "0%",
-      latency: `${latency}ms`,
-    });
-
-    if (data.components && data.components.db) {
-      results.push({
-        id: "postgres-db",
-        name: "PostgreSQL Database",
-        type: "Database",
-        status: data.components.db.status === "UP" ? "operational" : "downtime",
-        uptime: "100%",
-        latency: "Internal",
-      });
-    }
-
-    return results;
-  } catch (error) {
-    console.error("EROARE CRITICĂ MONITORIZARE:", error);
-    console.error("Spring Boot Unreachable:", error);
-    return [
+    const results: ServiceHealth[] = [
       {
         id: "spring-backend",
         name: "Spring Boot API",
         type: "Core Backend",
-        status: "downtime",
-        uptime: "0%",
-        latency: "-",
+        status: data.status === "UP" ? "operational" : "degraded",
+        uptime: data.status === "UP" ? "100%" : "0%",
+        latency: `${latency}ms`,
       },
-      {
-        id: "postgres-db",
-        name: "PostgreSQL Database",
-        type: "Database",
-        status: "downtime",
-        uptime: "0%",
-        latency: "-",
-      },
+    ];
+
+    const db = data.components?.db;
+    results.push({
+      id: "postgres-db",
+      name: "PostgreSQL Database",
+      type: "Database",
+      ...(db?.status === "UP"
+        ? { status: "operational" as const, uptime: "100%", latency: "Internal" }
+        : DOWN),
+    });
+
+    return results;
+  } catch (error) {
+    console.error(`Health check failed for ${url}:`, error);
+    return [
+      { id: "spring-backend", name: "Spring Boot API", type: "Core Backend", ...DOWN },
+      { id: "postgres-db", name: "PostgreSQL Database", type: "Database", ...DOWN },
     ];
   }
 }
@@ -89,23 +74,23 @@ export async function checkExternalUrl(service: {
       method: "HEAD",
       signal: AbortSignal.timeout(3000),
     });
-    const end = performance.now();
     return {
       id: service.id,
       name: service.name,
       type: service.type,
       status: res.ok ? "operational" : "downtime",
       uptime: res.ok ? "100%" : "0%",
-      latency: `${Math.round(end - start)}ms`,
+      latency: `${Math.round(performance.now() - start)}ms`,
     };
   } catch {
-    return {
-      id: service.id,
-      name: service.name,
-      type: service.type,
-      status: "downtime",
-      uptime: "0%",
-      latency: "-",
-    };
+    return { id: service.id, name: service.name, type: service.type, ...DOWN };
   }
+}
+
+export async function getAllServiceHealth(): Promise<ServiceHealth[]> {
+  const [internal, external] = await Promise.all([
+    checkSpringBootBackend(),
+    Promise.all(MONITORING_CONFIG.externalServices.map((s) => checkExternalUrl(s))),
+  ]);
+  return [...internal, ...external];
 }

@@ -1,8 +1,9 @@
 package com.company.management.users.model;
 
 import com.company.management.projects.model.Microservice;
-import java.time.LocalDateTime;
 import jakarta.persistence.*;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "users")
@@ -24,10 +25,11 @@ public class User {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
+    /** System role used for authorization: "USER" or "ADMIN". */
     @Column(nullable = false)
-    private String role; 
+    private String role;
 
-    @Column(nullable = true)
+    @Column(nullable = true, length = 1000)
     private String avatar;
 
     @Column(name = "notifications_enabled")
@@ -40,9 +42,14 @@ public class User {
     @JoinColumn(name = "microservice_id")
     private Microservice project;
 
+    /** Role inside the assigned project (Developer/Manager/Designer); independent of {@link #role}. */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "project_role")
+    private ProjectRole projectRole;
+
     public User() {
         this.createdAt = LocalDateTime.now();
-        this.role = "USER"; 
+        this.role = "USER";
     }
 
     public Long getId() { return id; }
@@ -63,4 +70,6 @@ public class User {
     public void setThemePreference(String t) { this.themePreference = t; }
     public Microservice getProject() { return project; }
     public void setProject(Microservice project) { this.project = project; }
+    public ProjectRole getProjectRole() { return projectRole; }
+    public void setProjectRole(ProjectRole projectRole) { this.projectRole = projectRole; }
 }

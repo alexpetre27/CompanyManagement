@@ -1,13 +1,16 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Coffee } from "lucide-react";
 import { TaskItemMini } from "@/components/dashboard/MiniTaskItem";
 import { CreateTaskDialog } from "@/components/dashboard/CreateTaskDialog";
-import { TasksCardProps } from "@/types/dashboard";
-import { User } from "@/types/user";
+import { toggleTaskAction } from "@/lib/actions/task";
+import type { TasksCardProps } from "@/types/dashboard";
+import type { User } from "@/types/user";
 
 interface ExtendedTasksCardProps extends TasksCardProps {
   users?: User[];
@@ -20,7 +23,20 @@ export function TasksCard({
   users = [],
   currentUser,
 }: ExtendedTasksCardProps) {
+  const router = useRouter();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [pendingId, setPendingId] = useState<string | null>(null);
+
+  const handleToggle = async (taskId: string) => {
+    setPendingId(taskId);
+    const result = await toggleTaskAction(taskId);
+    setPendingId(null);
+    if (!result.success) {
+      toast.error(result.message);
+      return;
+    }
+    router.refresh();
+  };
 
   return (
     <>
@@ -31,7 +47,7 @@ export function TasksCard({
               <Coffee size={14} className="text-indigo-500" />
             </div>
             <h2 className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
-              Today’s Tasks
+              My Tasks
             </h2>
           </div>
 
@@ -52,7 +68,11 @@ export function TasksCard({
                   key={task.id}
                   className="bg-slate-50/60 rounded-xl p-2 hover:bg-slate-50 transition"
                 >
-                  <TaskItemMini {...task} />
+                  <TaskItemMini
+                    {...task}
+                    pending={pendingId === task.id}
+                    onToggle={() => handleToggle(task.id)}
+                  />
                 </div>
               ))}
             </div>
@@ -66,7 +86,7 @@ export function TasksCard({
                 You’re all clear ☕
               </p>
               <p className="text-[11px] text-slate-400 mb-4 max-w-55 text-center">
-                No tasks scheduled for today. Enjoy the calm or add a new one.
+                No tasks yet. Enjoy the calm or add a new one.
               </p>
 
               <Button

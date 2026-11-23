@@ -12,30 +12,19 @@ import {
 } from "lucide-react";
 import { PageContainer } from "@/components/PageContainer";
 import { AutoRefresh } from "@/components/status/AutoRefresh";
-import Service from "@/types/service";
-
-async function getSystemHealth(): Promise<Service[]> {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-  try {
-    const res = await fetch(`${appUrl}/api/health`, { cache: "no-store" });
-    if (!res.ok) return [];
-    return await res.json();
-  } catch (error) {
-    return [];
-  }
-}
+import { getAllServiceHealth, type ServiceHealth } from "@/lib/health-check";
 
 export default async function StatusPage() {
   const session = await auth();
   if (!session) redirect("/login");
-  if (session.user?.role !== "ADMIN") return notFound();
+  if (session.user?.role !== "ADMIN") notFound();
 
-  const services = await getSystemHealth();
+  const services = await getAllServiceHealth();
   const issues = services.filter(
-    (s: Service) => s.status !== "operational",
+    (s: ServiceHealth) => s.status !== "operational",
   ).length;
-  const dbService = services.find((s: Service) => s.type === "Database");
-  const apiService = services.find((s: Service) => s.type === "Core Backend");
+  const dbService = services.find((s: ServiceHealth) => s.type === "Database");
+  const apiService = services.find((s: ServiceHealth) => s.type === "Core Backend");
   const dbHealth = dbService?.status === "operational" ? 100 : 0;
 
   return (
@@ -144,7 +133,7 @@ export default async function StatusPage() {
             </h3>
           </div>
           <div className="divide-y divide-slate-50">
-            {services.map((s: Service) => (
+            {services.map((s: ServiceHealth) => (
               <div
                 key={s.id}
                 className="p-4 px-6 flex items-center justify-between hover:bg-slate-50 transition-all"

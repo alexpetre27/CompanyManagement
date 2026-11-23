@@ -1,20 +1,17 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { PageContainer } from "@/components/PageContainer";
-import { getUsersServer, getProjectsServer } from "@/types/data";
+import { getUsersServer, getProjectsServer } from "@/lib/server/data";
 import { UsersTable } from "@/components/projects/UsersTable";
 import { UnassignedUsersList } from "@/components/projects/UnassignedUsersList";
 import { Users as UsersIcon } from "lucide-react";
 
 export default async function TeamPage() {
   const session = await auth();
+  if (!session?.user) redirect("/login");
 
-  if (!session?.user) {
-    redirect("/login");
-  }
-
-  const userRole = (session.user as { role?: string }).role || "USER";
-  const isAdmin = userRole === "ADMIN" || userRole === "ROLE_ADMIN";
+  const userRole = session.user.role || "USER";
+  const isAdmin = userRole === "ADMIN";
 
   const [users, projects] = await Promise.all([
     getUsersServer(),

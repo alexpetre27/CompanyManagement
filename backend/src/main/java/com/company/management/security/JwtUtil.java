@@ -1,49 +1,61 @@
 package com.company.management.security;
 
-import io.jsonwebtoken.*;
+import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import java.security.Key;
+
+import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
+/**
+ * Issues and parses the backend access tokens.
+ * The subject is the user's numeric id, so renaming a user or changing their
+ * e-mail does not invalidate tokens that are already in circulation.
+ */
 @Component
 public class JwtUtil {
-    private final Key key;
+
+    private static final int MIN_SECRET_BYTES = 32;
+
+    private final SecretKey key;
     private final long expirationMs;
 
     public JwtUtil(
-            @Value("${jwt.secret}") String secret,
-            @Value("${jwt.expirationMs:3600000}") long expirationMs
+            @Value("${jwt.secret:}") String secret,
+            @Value("${jwt.expiration-ms:86400000}") long expirationMs
     ) {
-        this.key = Keys.hmacShaKeyFor(secret.getBytes());
+        if (secret == null || secret.getBytes(StandardCharsets.UTF_8).length < MIN_SECRET_BYTES) {
+            throw new IllegalStateException(
+                    "JWT_SECRET must be set and be at least " + MIN_SECRET_BYTES + " bytes long");
+        }
+        this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         this.expirationMs = expirationMs;
     }
 
-    public String generateToken(String username) {
+    public String generateToken(Long userId) {
+        Date now = new Date();
         return Jwts.builder()
-                .setSubject(username)
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + expirationMs))
-                .signWith(key, SignatureAlgorithm.HS256)
+                .subject(String.valueOf(userId))
+                .issuedAt(now)
+                .expiration(new Date(now.getTime() + expirationMs))
+                .signWith(key)
                 .compact();
     }
 
-    public String extractUsername(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(key)
+    /** @return the user id stored in the token; throws if the token is invalid or expired. */
+    public Long extractUserId(String token) {
+        String subject = Jwts.parser()
+                .verifyWith(key)
                 .build()
-                .parseClaimsJws(token)
-                .getBody()
+                .parseSignedClaims(token)
+                .getPayload()
                 .getSubject();
+        return Long.valueOf(subject);
     }
 
-    public boolean validateToken(String token) {
-        try {
-            Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
+    public long getExpirationMs() {
+        return expirationMs;
     }
 }

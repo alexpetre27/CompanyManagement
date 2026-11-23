@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import {
   Briefcase,
   Users,
-  Clock,
+  CheckCircle2,
   TrendingUp,
   FolderOpen,
   CalendarDays,
@@ -23,10 +23,13 @@ import { ProjectRow } from "@/components/projects/RowProject";
 import { TasksCard } from "@/components/admin/TasksCard";
 import { StatTile } from "@/components/projects/StatTitle";
 import { SystemHealthCard } from "@/components/status/SystemHealthCard";
-import { getDashboardData } from "@/lib/services/dashboard.service";
-import { getSystemStats } from "@/lib/services/admin.service";
+import {
+  getDashboardData,
+  getProjectsServer,
+  getSystemStats,
+  getUsersServer,
+} from "@/lib/server/data";
 import { SystemEvent } from "@/types/dashboard";
-import { getProjectsServer, getUsersServer } from "@/types/data";
 
 interface SessionUser {
   name?: string | null;
@@ -55,7 +58,7 @@ export default async function DashboardPage() {
     stats: {
       activeProjects: 0,
       teamMembers: 0,
-      hoursWorked: 0,
+      completedTasks: 0,
       productivity: 0,
     },
     recentProjects: [],
@@ -157,9 +160,9 @@ export default async function DashboardPage() {
           color="purple"
         />
         <StatTile
-          icon={<Clock size={20} />}
-          label="Hours Tracked"
-          value={`${data.stats.hoursWorked}h`}
+          icon={<CheckCircle2 size={20} />}
+          label="Tasks Done"
+          value={data.stats.completedTasks}
           color="emerald"
         />
         <StatTile

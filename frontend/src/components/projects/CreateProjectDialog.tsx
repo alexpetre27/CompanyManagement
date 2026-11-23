@@ -17,7 +17,8 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Plus, Loader2, AlertTriangle } from "lucide-react";
+import { Plus, Loader2, AlertTriangle, Github, Globe } from "lucide-react";
+import { toast } from "sonner";
 import { getMembersAction, createProjectAction } from "@/lib/actions/project";
 
 interface CreateProjectDialogProps {
@@ -32,8 +33,10 @@ export function CreateProjectDialog({
 }: CreateProjectDialogProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isLoadingMembers, setIsLoadingMembers] = useState(false);
-  const [availableMembers, setAvailableMembers] = useState<User[]>([]);
+  // null = not loaded yet; fetched the first time the dialog opens.
+  const [members, setMembers] = useState<User[] | null>(null);
+  const isLoadingMembers = isOpen && isAdmin && members === null;
+  const availableMembers = members ?? [];
 
   const initialFormState = {
     name: "",
@@ -49,14 +52,15 @@ export function CreateProjectDialog({
   const [formData, setFormData] = useState(initialFormState);
 
   useEffect(() => {
-    if (isOpen && isAdmin) {
-      setIsLoadingMembers(true);
-      getMembersAction()
-        .then((data) => setAvailableMembers(data || []))
-        .catch(() => setAvailableMembers([]))
-        .finally(() => setIsLoadingMembers(false));
-    }
-  }, [isOpen, isAdmin]);
+    if (!isOpen || !isAdmin || members !== null) return;
+    let cancelled = false;
+    getMembersAction()
+      .then((data) => !cancelled && setMembers(data || []))
+      .catch(() => !cancelled && setMembers([]));
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, isAdmin, members]);
 
   const toggleMember = (memberName: string) => {
     setFormData((prev) => ({
@@ -68,29 +72,34 @@ export function CreateProjectDialog({
   };
 
   const handleCreateProject = async () => {
-    if (!formData.name || !formData.port) return;
+    if (!formData.name.trim()) {
+      toast.error("Project name is required.");
+      return;
+    }
+    if (!formData.port || formData.port < 1 || formData.port > 65535) {
+      toast.error("Port must be between 1 and 65535.");
+      return;
+    }
 
     setIsSubmitting(true);
-    try {
-      const payload = {
-        ...formData,
-        techStack: formData.techStack
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean),
-      };
+    const result = await createProjectAction({
+      ...formData,
+      name: formData.name.trim(),
+      techStack: formData.techStack
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean),
+    });
+    setIsSubmitting(false);
 
-      await createProjectAction(payload);
-
-      setFormData(initialFormState);
-      onOpenChange(false);
-      router.refresh();
-    } catch (e) {
-      console.error("Failed to create:", e);
-      alert("Eroare la crearea proiectului. Verifică consola.");
-    } finally {
-      setIsSubmitting(false);
+    if (!result.success) {
+      toast.error(result.message);
+      return;
     }
+    toast.success("Project created");
+    setFormData(initialFormState);
+    onOpenChange(false);
+    router.refresh();
   };
 
   return (
@@ -180,6 +189,35 @@ export function CreateProjectDialog({
               </div>
             </div>
 
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <Label className="text-xs font-bold flex items-center gap-1">
+                  <Github size={12} /> Repo URL
+                </Label>
+                <Input
+                  className="h-9 text-xs"
+                  value={formData.repoUrl}
+                  onChange={(e) =>
+                    setFormData({ ...formData, repoUrl: e.target.value })
+                  }
+                  placeholder="https://github.com/..."
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs font-bold flex items-center gap-1">
+                  <Globe size={12} /> Live URL
+                </Label>
+                <Input
+                  className="h-9 text-xs"
+                  value={formData.liveUrl}
+                  onChange={(e) =>
+                    setFormData({ ...formData, liveUrl: e.target.value })
+                  }
+                  placeholder="https://..."
+                />
+              </div>
+            </div>
+
             <div className="space-y-2">
               <Label className="text-xs font-bold">Team Members</Label>
               <div className="border border-slate-100 rounded-xl p-2 max-h-40 overflow-y-auto bg-slate-50/50 space-y-1">
@@ -202,6 +240,7 @@ export function CreateProjectDialog({
                     >
                       <Checkbox
                         checked={formData.teamMembers.includes(member.name)}
+                        onClick={(e) => e.stopPropagation()}
                         onCheckedChange={() => toggleMember(member.name)}
                       />
                       <div className="flex-1 flex justify-between items-center">

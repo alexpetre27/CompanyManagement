@@ -1,41 +1,21 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { SettingsView } from "@/components/Settings";
-async function getCurrentUser(token: string) {
-  const apiUrl = process.env.INTERNAL_API_URL || "http://backend:8080/api";
-  try {
-    const res = await fetch(`${apiUrl}/users/me`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      cache: "no-store",
-    });
-
-    if (res.ok) {
-      return await res.json();
-    }
-  } catch (error) {
-    console.error("Failed to fetch user profile:", error);
-  }
-  return null;
-}
+import { getCurrentUserServer } from "@/lib/server/data";
 
 export default async function SettingsPage() {
   const session = await auth();
+  if (!session?.user) redirect("/login");
 
-  if (!session?.user || !session.accessToken) {
-    redirect("/login");
-  }
-
-  const apiUser = await getCurrentUser(session.accessToken);
+  const apiUser = await getCurrentUserServer();
 
   const userData = {
-    name: apiUser?.username || session.user.name || "User",
+    name: apiUser?.name || session.user.username || session.user.name || "User",
     email: apiUser?.email || session.user.email || "",
     role: apiUser?.role || session.user.role || "USER",
     avatar: apiUser?.avatar || session.user.image || null,
+    notificationsEnabled: apiUser?.notificationsEnabled ?? true,
+    themePreference: apiUser?.themePreference ?? "LIGHT",
   };
 
   return (

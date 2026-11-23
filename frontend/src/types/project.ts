@@ -5,41 +5,29 @@ export interface ProjectMember {
   avatar?: string;
 }
 
+export type ProjectStatus = "ACTIVE" | "COMPLETED" | "ON_HOLD" | string;
+
+export interface Project {
+  id: number;
+  name: string;
+  description: string | null;
+  status: ProjectStatus;
+  version: string;
+  updatedAt: string;
+  teamCount: number;
+  port?: number | null;
+  uptime?: string | null;
+  techStack?: string[];
+  team?: ProjectMember[];
+  repoUrl?: string | null;
+  liveUrl?: string | null;
+}
+
 export interface ProjectCardProps {
   project: Project;
   onClick: (project: Project) => void;
 }
-export interface ProjectResponse {
-  id: string | number;
-  name: string;
-}
-export interface ProjectsViewProps {
-  initialProjects: Project[];
-  isAdmin: boolean;
-}
 
-export interface FilterOption {
-  label: string;
-  value: string;
-  icon?: React.ReactNode;
-}
-export interface Project {
-  port?: number;
-  uptime?: string;
-  url?: string;
-  id: number;
-  name: string;
-  description: string;
-  status: "ACTIVE" | "COMPLETED" | "ON_HOLD";
-  version: string;
-  updatedAt: string;
-  teamCount: number;
-
-  techStack?: string[];
-  team?: ProjectMember[];
-  repoUrl?: string;
-  liveUrl?: string;
-}
 export interface ProjectsToolbarProps {
   searchTerm: string;
   setSearchTerm: (value: string) => void;
@@ -48,9 +36,21 @@ export interface ProjectsToolbarProps {
   viewMode: "grid" | "list";
   setViewMode: (mode: "grid" | "list") => void;
 }
+
 export interface ProjectSelectorProps {
   projects: Project[];
   selectedId: string;
   onSelect: (id: string) => void;
   themeRing: string;
+}
+
+export interface CreateProjectPayload {
+  name: string;
+  version: string;
+  port: number;
+  description: string;
+  repoUrl: string;
+  liveUrl: string;
+  techStack: string[];
+  teamMembers: string[];
 }

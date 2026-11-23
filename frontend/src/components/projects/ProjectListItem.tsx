@@ -11,7 +11,8 @@ export function ProjectListItem({ project, onClick }: ProjectCardProps) {
     DEFAULT: "bg-slate-300",
   };
 
-  const statusColor = statusColors[project.status] || statusColors.DEFAULT;
+  const statusColor =
+    statusColors[(project.status || "").toUpperCase()] || statusColors.DEFAULT;
 
   return (
     <div

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -21,7 +21,7 @@ import {
   User as UserIcon,
 } from "lucide-react";
 import { toast } from "sonner";
-import { createTask, CreateTaskDTO } from "@/lib/services/task.service";
+import { createTaskAction } from "@/lib/actions/task";
 import { User } from "@/types/user";
 import { cn } from "@/lib/utils";
 import {
@@ -31,6 +31,13 @@ import {
 } from "@/types/dashboard";
 import { ProjectSelector } from "@/components/projects/ProjectSelector";
 import { DifficultySelector } from "@/components/dashboard/DifficultySelector";
+
+const EMPTY_FORM = {
+  title: "",
+  projectId: "",
+  difficulty: "LOW" as DifficultyLevel,
+  assigneeId: "",
+};
 
 interface ExtendedProps extends CreateTaskDialogProps {
   users: User[];
@@ -47,28 +54,23 @@ export function CreateTaskDialog({
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [isAssigneeOpen, setIsAssigneeOpen] = useState(false);
-  const [formData, setFormData] = useState<
-    CreateTaskDTO & { assigneeId?: string }
-  >({
-    title: "",
-    projectId: "",
-    difficulty: "LOW",
-    assigneeId: "",
-  });
+  const [formData, setFormData] = useState<{
+    title: string;
+    projectId: string;
+    difficulty: DifficultyLevel;
+    assigneeId: string;
+  }>(EMPTY_FORM);
 
   const isAdmin = currentUser?.role === "ADMIN";
 
-  useEffect(() => {
-    if (isOpen) {
-      setFormData({
-        title: "",
-        projectId: "",
-        difficulty: "LOW",
-        assigneeId: "",
-      });
+  // Reset when the dialog closes, so it always opens empty.
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      setFormData(EMPTY_FORM);
       setIsAssigneeOpen(false);
     }
-  }, [isOpen]);
+    onOpenChange(open);
+  };
 
   const currentTheme = themeConfig[formData.difficulty as DifficultyLevel];
 
@@ -88,26 +90,31 @@ export function CreateTaskDialog({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.title || !formData.projectId) {
+    if (!formData.title.trim() || !formData.projectId) {
       toast.error("Please fill in all required fields");
       return;
     }
 
     setLoading(true);
-    try {
-      await createTask(formData);
-      toast.success("Task created successfully!");
-      onOpenChange(false);
-      router.refresh();
-    } catch {
-      toast.error("Failed to create task");
-    } finally {
-      setLoading(false);
+    const result = await createTaskAction({
+      title: formData.title.trim(),
+      projectId: Number(formData.projectId),
+      difficulty: formData.difficulty,
+      assigneeId: isAdmin && formData.assigneeId ? Number(formData.assigneeId) : null,
+    });
+    setLoading(false);
+
+    if (!result.success) {
+      toast.error(result.message || "Failed to create task");
+      return;
     }
+    toast.success("Task created successfully!");
+    handleOpenChange(false);
+    router.refresh();
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-115 p-0 overflow-visible border-none shadow-2xl rounded-[28px]">
         <motion.div
           initial={false}
@@ -308,7 +315,7 @@ export function CreateTaskDialog({
               <Button
                 type="button"
                 variant="ghost"
-                onClick={() => onOpenChange(false)}
+                onClick={() => handleOpenChange(false)}
                 className="flex-1 rounded-xl h-12 font-bold text-slate-500 hover:bg-slate-100"
               >
                 Cancel

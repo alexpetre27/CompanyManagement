@@ -20,24 +20,3 @@ export const PageContainer = ({
     </motion.div>
   );
 };
-
-export const CardHover = ({
-  children,
-  className,
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) => {
-  return (
-    <motion.div
-      whileHover={{
-        y: -4,
-        boxShadow: "0 10px 30px -10px rgba(99, 102, 241, 0.2)",
-      }}
-      transition={{ type: "spring", stiffness: 300 }}
-      className={className}
-    >
-      {children}
-    </motion.div>
-  );
-};

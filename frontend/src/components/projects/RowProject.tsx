@@ -1,9 +1,15 @@
+import Link from "next/link";
 import { LayoutGrid } from "lucide-react";
-import { Project } from "@/types/project";
+import type { DashboardProject } from "@/types/dashboard";
 
-export function ProjectRow({ name, version, updatedAt, teamCount }: Project) {
+export function ProjectRow({ id, name, version, updatedAt, teamCount }: DashboardProject) {
+  const members = Math.max(0, Number(teamCount) || 0);
+
   return (
-    <div className="flex items-center justify-between p-2 hover:bg-slate-50 rounded-xl transition-all duration-200 group cursor-pointer border border-transparent hover:border-slate-100 active:scale-[0.98]">
+    <Link
+      href={`/projects/${id}`}
+      className="flex items-center justify-between p-2 hover:bg-slate-50 rounded-xl transition-all duration-200 group cursor-pointer border border-transparent hover:border-slate-100 active:scale-[0.98]"
+    >
       <div className="flex items-center gap-3">
         <div className="p-2 bg-white border border-slate-100 rounded-lg text-slate-400 group-hover:text-[#6366f1] transition-colors shadow-sm">
           <LayoutGrid size={16} />
@@ -19,18 +25,18 @@ export function ProjectRow({ name, version, updatedAt, teamCount }: Project) {
         </div>
       </div>
       <div className="flex -space-x-1.5 items-center">
-        {[...Array(Math.min(teamCount, 3))].map((_, i) => (
+        {Array.from({ length: Math.min(members, 3) }, (_, i) => (
           <div
             key={i}
             className="w-6 h-6 rounded-full border-2 border-white bg-slate-200"
           />
         ))}
-        {teamCount > 3 && (
+        {members > 3 && (
           <div className="w-6 h-6 rounded-full border-2 border-white bg-[#6366f1] text-[8px] text-white flex items-center justify-center font-bold">
-            +{teamCount - 3}
+            +{members - 3}
           </div>
         )}
       </div>
-    </div>
+    </Link>
   );
 }
