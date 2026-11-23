@@ -43,6 +43,12 @@ npm install --legacy-peer-deps
 npm run dev
 ```
 
+## Tests
+
+* Backend unit tests: `cd backend && ./mvnw test`
+* Frontend static checks: `cd frontend && npx tsc --noEmit && npx eslint src`
+* End-to-end UI + API QA against a throwaway stack: see [`e2e/README.md`](e2e/README.md)
+
 ## Configuration
 
 | Variable | Used by | Purpose |
